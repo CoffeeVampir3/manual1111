@@ -1,12 +1,12 @@
 import gradio as gr
 import os
-from tabs.tab_utils import get_available_from_dir
+from tabs.tab_utils import get_available_from_dir, get_available_from_leafs
 from mechanisms.t2i import run_t2i
 from shared.scheduler_utils import get_available_scheduler_names
 
 def make_text_to_image_tab():
     with gr.Blocks() as interface:
-        available_models = get_available_from_dir("models")
+        available_models = get_available_from_leafs("models")
         model_path = gr.Dropdown(choices = available_models, label="Base model")
         with gr.Row():
             with gr.Column():

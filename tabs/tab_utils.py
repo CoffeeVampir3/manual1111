@@ -12,7 +12,7 @@ def find_leaf_directories(parent_directory):
 def find_leaf_files(parent_directory):
     files = []
     for item in os.scandir(parent_directory):
-        # If it's a file, add it to the list
+        print(item)
         if item.is_file():
             files.append(item.path)
     return files
@@ -21,7 +21,7 @@ def get_available_from_dir(target):
     return [os.path.basename(x) for x in find_leaf_directories(target)]
 
 def get_available_from_leafs(target):
-    return [os.path.basename(x) for x in find_leaf_files("datasets")]
+    return [os.path.basename(x) for x in find_leaf_files(target)]
 
 def get_available_devices():
     cuda_devices = "Use only CUDA Devices: "

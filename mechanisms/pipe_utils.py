@@ -38,23 +38,30 @@ def load_diffusers_pipe(model_path, device):
         torch.cuda.synchronize()
     
     #load new pipe
-    try:
-        LOADED_PIPE = StableDiffusionXLPipeline.from_pretrained(model_path, torch_dtype=torch.bfloat16, use_safetensors=True, variant="fp16", add_watermarker=False)
-        LOADED_PIPE.watermark = NoWatermarker()
-        if is_xformers_available():
-            try:
-                LOADED_PIPE.enable_xformers_memory_efficient_attention()
-            except:
-                pass
-        LOADED_PIPE.enable_vae_tiling()
-        LOADED_PIPE.to(device)
-        #if device != "cpu":
-        #    LOADED_PIPE.enable_sequential_cpu_offload()
-        LOADED_MODEL_PATH = model_path
-    except Exception as e:
-        print(f"Error loading the model: {e}")
-        LOADED_PIPE = None  # Reset to None if there was an error
-        LOADED_MODEL_PATH = None
+    #try:
+    LOADED_PIPE = StableDiffusionXLPipeline.from_single_file(
+        model_path, 
+        torch_dtype=torch.bfloat16, 
+        use_safetensors=True, 
+        variant="fp16", 
+        add_watermarker=False)
+    
+    LOADED_PIPE.watermark = NoWatermarker()
+    
+    if is_xformers_available():
+        try:
+            LOADED_PIPE.enable_xformers_memory_efficient_attention()
+        except:
+            pass
+    LOADED_PIPE.enable_vae_tiling()
+    LOADED_PIPE.to(device)
+    #if device != "cpu":
+    #    LOADED_PIPE.enable_sequential_cpu_offload()
+    LOADED_MODEL_PATH = model_path
+    #except Exception as e:
+    #    print(f"Error loading the model: {e}")
+    #    LOADED_PIPE = None  # Reset to None if there was an error
+    #    LOADED_MODEL_PATH = None
     
     return LOADED_PIPE
 
