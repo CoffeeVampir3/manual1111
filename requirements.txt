@@ -1,6 +1,7 @@
 gradio >= 3.35
-git+https://github.com/huggingface/diffusers/tree/main
+git+https://github.com/huggingface/diffusers
 accelerate >= 0.21.0
 Pillow
 safetensors >= 0.3
 transformers >= 4.31
+huggingface_hub >= 0.15
