@@ -17,7 +17,7 @@ def load_ui_config(model_path):
     dest = (dir_path/file_name)
 
     if not dest.exists():
-        return {model_path: ""}
+        return {model_path: ""} #Hack but it work
 
     config = OmegaConf.load(dest)
     return list(config.values())
