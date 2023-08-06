@@ -8,3 +8,5 @@ models/*
 __pycache__/
 
 outputs/*
+
+configs/*
