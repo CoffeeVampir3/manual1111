@@ -80,5 +80,5 @@ def get_rng_generator(device):
     GENERATOR = None
     if GENERATOR:
         return GENERATOR
-    GENERATOR = torch.Generator("cuda")
+    GENERATOR = torch.Generator(device)
     return GENERATOR
