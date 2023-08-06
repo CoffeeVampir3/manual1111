@@ -52,6 +52,6 @@ def run_t2i(model_path,
         yield all_images
         del images
     
-    current_time_as_text = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    current_time_as_text = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     save_images("outputs", current_time_as_text, all_images)
     #return all_images
