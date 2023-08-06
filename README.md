@@ -1,3 +1,5 @@
+[![Discord](https://img.shields.io/discord/232596713892872193?logo=discord)](https://discord.gg/2JhHVh7CGu)
+
 # manual1111
 Experimental Stable Diffusion XL Webui
 
