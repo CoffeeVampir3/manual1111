@@ -1,9 +1,7 @@
 [![Discord](https://img.shields.io/discord/232596713892872193?logo=discord)](https://discord.gg/2JhHVh7CGu)
 
-![preview](https://github.com/CoffeeVampir3/manual1111/blob/af940d212bb126bfc38ce0fc02ff6a7d45478c83/image.png)
-
 # manual1111
-Experimental Stable Diffusion XL Webui
+![preview](https://github.com/CoffeeVampir3/manual1111/blob/af940d212bb126bfc38ce0fc02ff6a7d45478c83/image.png)
 
 # Install
 `pip install -r requirements.txt`
