@@ -1,0 +1,10 @@
+__pycache__
+.ipynb_checkpoints
+*.ipynb
+
+models/*
+!models/*.txt
+
+__pycache__/
+
+outputs/*
