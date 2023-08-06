@@ -1,0 +1,4 @@
+gradio
+diffusers
+accelerate
+Pillow

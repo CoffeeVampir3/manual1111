@@ -2,6 +2,7 @@ import torch
 from diffusers import StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipeline
 from PIL import Image
 import os, gc, random, sys, json, random, time
+from diffusers.utils.import_utils import is_xformers_available
 
 #Mostly an anachronism but useful for people on older transformers ver
 class NoWatermarker:
@@ -40,7 +41,11 @@ def load_diffusers_pipe(model_path, device):
     try:
         LOADED_PIPE = StableDiffusionXLPipeline.from_pretrained(model_path, torch_dtype=torch.bfloat16, use_safetensors=True, variant="fp16", add_watermarker=False)
         LOADED_PIPE.watermark = NoWatermarker()
-        LOADED_PIPE.enable_xformers_memory_efficient_attention()
+        if is_xformers_available():
+            try:
+                LOADED_PIPE.enable_xformers_memory_efficient_attention()
+            except:
+                pass
         LOADED_PIPE.enable_vae_tiling()
         LOADED_PIPE.to(device)
         #if device != "cpu":
