@@ -27,10 +27,10 @@ def make_text_to_image_tab():
                         batch_size = gr.Slider(minimum=1, maximum=20.0, value=4.0, step=1.0, label="Batch Size")
                     scheduler_name = gr.Dropdown(choices = get_available_scheduler_names(), label="Scheduler")
                     generating = [seed, classifier_free_guidance, batch_size, scheduler_name]
-                
+
             with gr.Box():
                 output_gallery = gr.Gallery()
                 submit = gr.Button("Generate")
-            
+
             submit.click(fn=run_t2i, inputs=[model_path, *conditioning, *generating], outputs=output_gallery)
     return interface

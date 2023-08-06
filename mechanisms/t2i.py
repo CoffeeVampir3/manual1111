@@ -32,7 +32,6 @@ def run_t2i(model_path,
         #"guidance_rescale":0.7,
     }
     
-
     images = pipe(
         prompt_embeds = pos, 
         negative_prompt_embeds = neg, 
