@@ -5,3 +5,4 @@ Pillow
 safetensors >= 0.3
 transformers >= 4.31
 huggingface_hub >= 0.15
+omegaconf

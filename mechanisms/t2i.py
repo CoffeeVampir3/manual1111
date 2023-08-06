@@ -5,10 +5,16 @@ from mechanisms.pipe_utils import load_diffusers_pipe, get_rng_generator
 from mechanisms.image_utils import save_images
 from datetime import datetime
 from mechanisms.tokenizers_utils import encode_from_pipe
+from dataclasses import dataclass
+from shared.config_utils import save_ui_config
 
 def run_t2i(model_path, 
-            positive_prompt, positive_keywords, negative_prompt, negative_keywords, 
-            seed, cfg, batch_size, number_of_batches, scheduler_name):
+        positive_prompt, keyword_prompt, negative_prompt, negative_keyword_prompt,
+        seed, classifier_free_guidance, generation_steps, batch_size, number_of_batches, scheduler_name):
+    
+    t2i_data = locals()
+    save_ui_config(**t2i_data)
+    
     scheduler = get_scheduler_by_name(scheduler_name)
     resolved_model_path = get_path_from_leaf("models", model_path)
     device = "cuda"
@@ -22,14 +28,13 @@ def run_t2i(model_path,
     else: nseed = seed
     generator.manual_seed(nseed)
     
-    pos, neg, pos_pool, neg_pool = encode_from_pipe(pipe, positive_prompt, negative_prompt, positive_keywords, negative_keywords, batch_size)
+    pos, neg, pos_pool, neg_pool = encode_from_pipe(pipe, positive_prompt, negative_prompt, keyword_prompt, negative_keyword_prompt, batch_size)
     
     generation_configs = {
-        "num_inference_steps":35,
+        "num_inference_steps":generation_steps,
         "width":1024,
         "height":1024,
-        "guidance_scale":cfg,
-        #"guidance_rescale":0.7,
+        "guidance_scale":classifier_free_guidance,
     }
     
     all_images = []
