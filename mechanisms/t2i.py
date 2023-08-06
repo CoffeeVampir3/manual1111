@@ -8,7 +8,7 @@ from mechanisms.tokenizers_utils import encode_from_pipe
 
 def run_t2i(model_path, 
             positive_prompt, positive_keywords, negative_prompt, negative_keywords, 
-            seed, cfg, batch_size, scheduler_name):
+            seed, cfg, batch_size, number_of_batches, scheduler_name):
     scheduler = get_scheduler_by_name(scheduler_name)
     resolved_model_path = get_path_from_leaf("models", model_path)
     device = "cuda"
@@ -32,15 +32,21 @@ def run_t2i(model_path,
         #"guidance_rescale":0.7,
     }
     
-    images = pipe(
-        prompt_embeds = pos, 
-        negative_prompt_embeds = neg, 
-        pooled_prompt_embeds=pos_pool, 
-        negative_pooled_prompt_embeds=neg_pool, 
-        output_type = "pil", 
-        generator=generator,
-        **generation_configs).images
+    all_images = []
+    all_prompts = []
+    for n in range(int(number_of_batches)):
+        images = pipe(
+            prompt_embeds = pos, 
+            negative_prompt_embeds = neg, 
+            pooled_prompt_embeds=pos_pool, 
+            negative_pooled_prompt_embeds=neg_pool, 
+            output_type = "pil", 
+            generator=generator,
+            **generation_configs).images
+        all_images.extend(images)
+        yield all_images
+        del images
     
     current_time_as_text = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    save_images("outputs", current_time_as_text, images, positive_prompt)
-    return images
+    save_images("outputs", current_time_as_text, all_images)
+    #return all_images

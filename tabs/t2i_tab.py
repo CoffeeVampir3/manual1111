@@ -24,9 +24,11 @@ def make_text_to_image_tab():
                     with gr.Row():
                         seed = gr.Number(value=int(-1), label="Generation Seed")
                         classifier_free_guidance = gr.Slider(minimum=0.5, maximum=20.0, value=8.0, label="Classifier Free Guidance")
-                        batch_size = gr.Slider(minimum=1, maximum=20.0, value=4.0, step=1.0, label="Batch Size")
+                    with gr.Row():
+                        batch_size = gr.Slider(minimum=1, maximum=20.0, value=4.0, step=1.0, label="# Per Run")
+                        number_of_batches = gr.Slider(minimum=1, maximum=20.0, value=4.0, step=1.0, label="Run This Many Times")
                     scheduler_name = gr.Dropdown(choices = get_available_scheduler_names(), label="Scheduler")
-                    generating = [seed, classifier_free_guidance, batch_size, scheduler_name]
+                    generating = [seed, classifier_free_guidance, batch_size, number_of_batches, scheduler_name]
 
             with gr.Box():
                 output_gallery = gr.Gallery()
