@@ -12,7 +12,6 @@ def find_leaf_directories(parent_directory):
 def find_leaf_files(parent_directory):
     files = []
     for item in os.scandir(parent_directory):
-        print(item)
         if item.is_file():
             files.append(item.path)
     return files

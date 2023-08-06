@@ -22,14 +22,13 @@ def encode_all(
     clip_tokenizer,
     openclip_encoder,
     openclip_tokenizer,
-    repeats=4,
+    repeats,
+    device
 ):
-    device = "cuda"
-
     _, pos_clip = encode_line(positive_keywords, clip_tokenizer, clip_encoder, device)
-    pos_pool, pos_openclip = encode_line(positive_prompt, openclip_tokenizer, openclip_encoder, device)
-
     _, neg_clip = encode_line(negative_keywords, clip_tokenizer, clip_encoder, device)
+    
+    pos_pool, pos_openclip = encode_line(positive_prompt, openclip_tokenizer, openclip_encoder, device)
     neg_pool, neg_openclip = encode_line(negative_prompt, openclip_tokenizer, openclip_encoder, device)
 
     pos_encodings = [
@@ -51,4 +50,4 @@ def encode_all(
 def encode_from_pipe(pipe, pos_prompt, neg_prompt, pos_key, neg_key, repeats):
     clip_enc, clip_tok = pipe.text_encoder, pipe.tokenizer
     openclip_enc, openclip_tok = pipe.text_encoder_2, pipe.tokenizer_2
-    return encode_all(pos_prompt, neg_prompt, pos_key, neg_key, clip_enc, clip_tok, openclip_enc, openclip_tok, repeats)
+    return encode_all(pos_prompt, neg_prompt, pos_key, neg_key, clip_enc, clip_tok, openclip_enc, openclip_tok, repeats, pipe.device)
