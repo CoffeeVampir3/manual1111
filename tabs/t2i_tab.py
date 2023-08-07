@@ -30,7 +30,7 @@ def make_text_to_image_tab():
                     with gr.Group():
                         with gr.Row():
                             seed = gr.Number(value=int(-1), label="Seed")
-                            classifier_free_guidance = gr.Slider(minimum=0.5, maximum=20.0, value=8.0, label="CFG")
+                            classifier_free_guidance = gr.Slider(minimum=0.5, maximum=100.0, value=8.0, label="CFG")
                             generation_steps = gr.Slider(minimum=1, maximum=100, step=int(1), value=int(24), label="Steps")
                         with gr.Row():
                             batch_size = gr.Slider(minimum=1, maximum=20, value=int(1), step=int(1), label="# Per Run")
