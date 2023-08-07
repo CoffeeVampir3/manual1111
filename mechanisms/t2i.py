@@ -14,7 +14,7 @@ def run_t2i(model_path,
         seed, classifier_free_guidance, generation_steps, batch_size, number_of_batches, scheduler_name):
     
     t2i_data = locals()
-    save_ui_config(**t2i_data)
+    save_ui_config("text_to_image_v1", **t2i_data)
     
     scheduler = get_scheduler_by_name(scheduler_name)
     resolved_model_path = get_path_from_leaf("models", model_path)

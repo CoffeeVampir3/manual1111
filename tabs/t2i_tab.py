@@ -19,10 +19,10 @@ def make_text_to_image_tab():
                         with gr.Group():
                             with gr.Row():
                                 positive_prompt = gr.TextArea(value="", lines=3, label="Positive Prompt")
-                                keyword_prompt = gr.TextArea(value="", lines=3, label="Positive Keywords", visible=False)
+                                keyword_prompt = gr.TextArea(value="", lines=3, label="Positive Keywords", visible=False) #Unused for now.
                             with gr.Row():
                                 negative_prompt = gr.TextArea(value="", lines=3, label="Negative Prompt")
-                                negative_keyword_prompt = gr.TextArea(value="", lines=3, label="Negative Keywords", visible=False)
+                                negative_keyword_prompt = gr.TextArea(value="", lines=3, label="Negative Keywords", visible=False) #Unused for now.
                             #conditioning = [positive_prompt, keyword_prompt, negative_prompt, negative_keyword_prompt]
                             conditioning = [positive_prompt, positive_prompt, negative_prompt, negative_prompt]
                 
@@ -31,22 +31,26 @@ def make_text_to_image_tab():
                         with gr.Row():
                             seed = gr.Number(value=int(-1), label="Seed")
                             classifier_free_guidance = gr.Slider(minimum=0.5, maximum=20.0, value=8.0, label="CFG")
-                            generation_steps = gr.Slider(minimum=1.0, maximum=100.0, value=24.0, label="Steps")
+                            generation_steps = gr.Slider(minimum=1, maximum=100, step=int(1), value=int(24), label="Steps")
                         with gr.Row():
-                            batch_size = gr.Slider(minimum=1, maximum=20.0, value=4.0, step=1.0, label="# Per Run")
-                            number_of_batches = gr.Slider(minimum=1, maximum=20.0, value=4.0, step=1.0, label="Run This Many Times")
+                            batch_size = gr.Slider(minimum=1, maximum=20, value=int(1), step=int(1), label="# Per Run")
+                            number_of_batches = gr.Slider(minimum=1, maximum=20, value=int(1), step=int(1), label="Run This Many Times")
                         scheduler_name = gr.Dropdown(choices = get_available_scheduler_names(), label="Scheduler")
                         generating = [seed, classifier_free_guidance, generation_steps, batch_size, number_of_batches, scheduler_name]
-                with gr.Row():
-                    submit = gr.Button("Generate")
-                    kill = gr.Button("Stop")
-                    kill.click(fn=killswitch_engage, queue=False)
+                with gr.Column():
+                    with gr.Row():
+                        kill = gr.Button("Stop")
+                        kill.click(fn=killswitch_engage, queue=False)
+                        submit = gr.Button("Generate")
 
             with gr.Column(scale=3):
-                output_gallery = gr.Gallery(object_fit="contain", container=False, preview=True, rows=2, height="85vh", allow_preview=True)
+                output_gallery = gr.Gallery(
+                    object_fit="contain", container=False, 
+                    preview=True, rows=2, height="85vh", 
+                    allow_preview=True)
 
     inputs = [model_path, *conditioning, *generating]
+    load_config = partial(load_ui_config, "text_to_image_v1", model_path)
     submit.click(fn=run_t2i, inputs=inputs, outputs=output_gallery)
-    load_config = partial(load_ui_config, model_path)
     interface.load(load_config, inputs=None, outputs=inputs)
     return interface
