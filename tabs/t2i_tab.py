@@ -30,7 +30,7 @@ def make_text_to_image_tab():
                     with gr.Group():
                         with gr.Row():
                             seed = gr.Number(value=int(-1), label="Seed")
-                            classifier_free_guidance = gr.Slider(minimum=0.5, maximum=100.0, value=8.0, label="CFG")
+                            classifier_free_guidance = gr.Slider(minimum=0.5, maximum=200.0, value=16.0, label="CFG")
                             generation_steps = gr.Slider(minimum=1, maximum=100, step=int(1), value=int(24), label="Steps")
                         with gr.Row():
                             image_width = gr.Slider(minimum=64, maximum=2048, step=int(8), value=int(1024), label="Width")
@@ -49,7 +49,7 @@ def make_text_to_image_tab():
             with gr.Column(scale=3):
                 output_gallery = gr.Gallery(
                     object_fit="contain", container=False, 
-                    preview=True, rows=2, height="85vh", 
+                    preview=True, rows=2, height="90vh", 
                     allow_preview=True)
 
     inputs = [model_path, *conditioning, *generating]

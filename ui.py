@@ -21,7 +21,7 @@ def get_cli_args():
     return args
 
 def bind_launch_args(interface, args):
-    launch_func = partial(interface.launch, quiet=True)
+    launch_func = partial(interface.launch, quiet=False)
     launch_func = partial(launch_func, share=args.share)
     if args.bind:
         launch_func = partial(launch_func, server_name="0.0.0.0")
