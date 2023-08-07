@@ -4,14 +4,6 @@ from PIL import Image
 import os, gc, random, sys, json, random, time
 from diffusers.utils.import_utils import is_xformers_available
 
-#Mostly an anachronism but useful for people on older transformers ver
-class NoWatermarker:
-    def __init__(self):
-        pass
-
-    def apply_watermark(self, images: torch.FloatTensor):
-        return images #Fake watermarker that bypasses watermarking.
-
 global LOADED_PIPE
 global LOADED_MODEL_PATH
 LOADED_PIPE = None
@@ -55,13 +47,12 @@ def load_diffusers_pipe(model_path, device):
             variant="fp16", 
             add_watermarker=False)
         
-        LOADED_PIPE.watermark = NoWatermarker()
-        
         if is_xformers_available():
             try:
                 LOADED_PIPE.enable_xformers_memory_efficient_attention()
             except:
                 pass
+        
         LOADED_PIPE.enable_vae_tiling()
         LOADED_PIPE.to(device)
         #if device != "cpu":

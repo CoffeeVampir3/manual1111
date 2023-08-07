@@ -5,6 +5,7 @@ from mechanisms.t2i import run_t2i
 from shared.scheduler_utils import get_available_scheduler_names
 from shared.config_utils import load_ui_config
 from functools import partial
+from mechanisms.killswitch import killswitch_engage
 
 def make_text_to_image_tab():
     with gr.Blocks() as interface:
@@ -36,7 +37,10 @@ def make_text_to_image_tab():
                             number_of_batches = gr.Slider(minimum=1, maximum=20.0, value=4.0, step=1.0, label="Run This Many Times")
                         scheduler_name = gr.Dropdown(choices = get_available_scheduler_names(), label="Scheduler")
                         generating = [seed, classifier_free_guidance, generation_steps, batch_size, number_of_batches, scheduler_name]
-                submit = gr.Button("Generate")
+                with gr.Row():
+                    submit = gr.Button("Generate")
+                    kill = gr.Button("Stop")
+                    kill.click(fn=killswitch_engage, queue=False)
 
             with gr.Column(scale=3):
                 output_gallery = gr.Gallery(object_fit="contain", container=False, preview=True, rows=2, height="85vh", allow_preview=True)

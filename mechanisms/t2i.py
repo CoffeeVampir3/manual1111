@@ -7,6 +7,7 @@ from datetime import datetime
 from mechanisms.tokenizers_utils import encode_from_pipe
 from dataclasses import dataclass
 from shared.config_utils import save_ui_config
+from mechanisms.killswitch import killswitch_callback, KillswitchEngaged
 
 def run_t2i(model_path, 
         positive_prompt, keyword_prompt, negative_prompt, negative_keyword_prompt,
@@ -36,21 +37,25 @@ def run_t2i(model_path,
         "height":1024,
         "guidance_scale":classifier_free_guidance,
     }
-    
+
     all_images = []
     all_prompts = []
-    for n in range(int(number_of_batches)):
-        images = pipe(
-            prompt_embeds = pos, 
-            negative_prompt_embeds = neg, 
-            pooled_prompt_embeds=pos_pool, 
-            negative_pooled_prompt_embeds=neg_pool, 
-            output_type = "pil", 
-            generator=generator,
-            **generation_configs).images
-        all_images.extend(images)
-        yield all_images
-        del images
+    try:
+        for n in range(int(number_of_batches)):
+            images = pipe(
+                prompt_embeds = pos, 
+                negative_prompt_embeds = neg, 
+                pooled_prompt_embeds=pos_pool, 
+                negative_pooled_prompt_embeds=neg_pool, 
+                output_type = "pil", 
+                generator=generator,
+                callback=killswitch_callback,
+                **generation_configs).images
+            all_images.extend(images)
+            yield all_images
+            del images
+    except KillswitchEngaged:
+        pass
     
     current_time_as_text = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
     save_images("outputs", current_time_as_text, all_images)

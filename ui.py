@@ -8,4 +8,5 @@ custom_css = (""".gradio-container {
 with gr.Blocks(css=custom_css) as interface:
     with gr.Tab("Text -> Image"):
         make_text_to_image_tab()
+
 interface.queue().launch(quiet=False)
