@@ -53,7 +53,7 @@ def make_text_to_image_tab():
                     allow_preview=True)
 
     inputs = [model_path, *conditioning, *generating]
-    load_config = partial(load_ui_config, "text_to_image_v1", model_path)
+    load_config = partial(load_ui_config, "text_to_image_v1", inputs)
     interface.load(load_config, inputs=None, outputs=inputs)
     submit.click(fn=run_t2i, inputs=inputs, outputs=output_gallery)
     

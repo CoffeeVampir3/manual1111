@@ -1,6 +1,7 @@
 import gradio as gr
 import argparse
 from tabs.t2i_tab import make_text_to_image_tab
+from tabs.config_tab import make_config_tab
 from functools import partial
 
 custom_css = (""".gradio-container {
@@ -10,6 +11,8 @@ custom_css = (""".gradio-container {
 with gr.Blocks(css=custom_css) as interface:
     with gr.Tab("Text -> Image"):
         make_text_to_image_tab()
+    with gr.Tab("Config"):
+        make_config_tab()
         
 def get_cli_args():
     parser = argparse.ArgumentParser(description='SDXL Diffusion Webui.')
@@ -23,8 +26,7 @@ def get_cli_args():
 def bind_launch_args(interface, args):
     launch_func = partial(interface.launch, quiet=False)
     launch_func = partial(launch_func, share=args.share)
-    if args.bind:
-        launch_func = partial(launch_func, server_name="0.0.0.0")
+    if args.bind: launch_func = partial(launch_func, server_name="0.0.0.0")
         
     return launch_func
 
@@ -33,3 +35,6 @@ if __name__ == '__main__':
     bound_launch = bind_launch_args(interface, args)
     interface.queue()
     bound_launch()
+    exit()
+#support for gradio launch debugger
+interface.queue().launch(quiet=False)

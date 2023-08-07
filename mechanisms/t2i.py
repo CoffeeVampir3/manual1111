@@ -2,7 +2,7 @@ import os, gc, random, sys, json, random, time
 from mechanisms.mech_utils import get_path_from_leaf
 from shared.scheduler_utils import get_scheduler_by_name
 from mechanisms.pipe_utils import load_diffusers_pipe, get_rng_generator
-from mechanisms.image_utils import save_images
+from mechanisms.image_utils import save_images, in_memory_encode_exif
 from datetime import datetime
 from mechanisms.tokenizers_utils import encode_from_pipe
 from dataclasses import dataclass
@@ -52,7 +52,9 @@ def run_t2i(model_path,
                 generator=generator,
                 callback=killswitch_callback,
                 **generation_configs).images
-            all_images.extend(images)
+            for image in images:
+                encoded_img = in_memory_encode_exif(image, positive_prompt)
+                all_images.append(encoded_img)
             yield all_images
             del images
     except KillswitchEngaged:
