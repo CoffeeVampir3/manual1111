@@ -11,7 +11,8 @@ from mechanisms.killswitch import killswitch_callback, KillswitchEngaged
 
 def run_t2i(model_path, 
         positive_prompt, keyword_prompt, negative_prompt, negative_keyword_prompt,
-        seed, classifier_free_guidance, generation_steps, batch_size, number_of_batches, scheduler_name):
+        seed, classifier_free_guidance, generation_steps, image_width, image_height,
+        batch_size, number_of_batches, scheduler_name):
     
     t2i_data = locals()
     save_ui_config("text_to_image_v1", **t2i_data)
@@ -33,8 +34,8 @@ def run_t2i(model_path,
     
     generation_configs = {
         "num_inference_steps":generation_steps,
-        "width":1024,
-        "height":1024,
+        "width":image_width,
+        "height":image_height,
         "guidance_scale":classifier_free_guidance,
     }
 

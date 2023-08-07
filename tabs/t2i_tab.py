@@ -33,10 +33,13 @@ def make_text_to_image_tab():
                             classifier_free_guidance = gr.Slider(minimum=0.5, maximum=100.0, value=8.0, label="CFG")
                             generation_steps = gr.Slider(minimum=1, maximum=100, step=int(1), value=int(24), label="Steps")
                         with gr.Row():
+                            image_width = gr.Slider(minimum=64, maximum=2048, step=int(8), value=int(1024), label="Width")
+                            image_height = gr.Slider(minimum=64, maximum=2048, step=int(8), value=int(1024), label="Height")
+                        with gr.Row():
                             batch_size = gr.Slider(minimum=1, maximum=20, value=int(1), step=int(1), label="# Per Run")
                             number_of_batches = gr.Slider(minimum=1, maximum=20, value=int(1), step=int(1), label="Run This Many Times")
                         scheduler_name = gr.Dropdown(choices = get_available_scheduler_names(), label="Scheduler")
-                        generating = [seed, classifier_free_guidance, generation_steps, batch_size, number_of_batches, scheduler_name]
+                        generating = [seed, classifier_free_guidance, generation_steps, image_width, image_height, batch_size, number_of_batches, scheduler_name]
                 with gr.Column():
                     with gr.Row():
                         kill = gr.Button("Stop")
@@ -51,6 +54,7 @@ def make_text_to_image_tab():
 
     inputs = [model_path, *conditioning, *generating]
     load_config = partial(load_ui_config, "text_to_image_v1", model_path)
-    submit.click(fn=run_t2i, inputs=inputs, outputs=output_gallery)
     interface.load(load_config, inputs=None, outputs=inputs)
+    submit.click(fn=run_t2i, inputs=inputs, outputs=output_gallery)
+    
     return interface
