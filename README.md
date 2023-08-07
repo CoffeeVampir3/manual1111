@@ -16,3 +16,7 @@ If you're on linux and have a bunch of stable diffusion models already, you can 
 
 # To run:
 `python ui.py`
+
+# Some info:
+
+Check out the sparse wiki for a few tips: (https://github.com/CoffeeVampir3/manual1111/wiki)
