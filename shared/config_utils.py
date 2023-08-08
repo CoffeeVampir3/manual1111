@@ -29,14 +29,10 @@ def load_ui_config(tab_name, blank_items):
     if num_args:
         del config.number_of_arguments
         
-    values = list(config.values())
+    values = list(OmegaConf.to_container(config, resolve=True).values())
     num_values = len(values)
     if not num_args or num_args != num_values:
+        print(f"Found an outdated/mismatched config for: {tab_name} - unable to load it.")
         return {item: gr.skip() for item in blank_items}
-    
-
-    for idx, x in enumerate(values):
-        if OmegaConf.is_list(x):
-            values[idx] = [None] + OmegaConf.to_container(x, resolve=True)
     
     return values
