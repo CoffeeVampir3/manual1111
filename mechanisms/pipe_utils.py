@@ -54,7 +54,8 @@ def load_scheduler(pipe, scheduler):
         "use_karras_sigmas": False
     }
 
-    LOADED_PIPE.scheduler = scheduler.from_config(scheduler_dict) 
+    pipe.scheduler = scheduler.from_config(scheduler_dict) 
+    return pipe
     
 def load_diffusers_pipe(model_path, scheduler, device):
     global LOADED_PIPE
@@ -85,7 +86,7 @@ def load_diffusers_pipe(model_path, scheduler, device):
             add_watermarker=False)
         LOADED_PIPE.watermark = NoWatermarker()
         
-        load_scheduler(LOADED_PIPE, scheduler)
+        LOADED_PIPE = load_scheduler(LOADED_PIPE, scheduler)
         
         if is_xformers_available():
             try:
