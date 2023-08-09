@@ -5,8 +5,10 @@ import gradio as gr
 def save_ui_config(tab_name, **kwargs):
     config = OmegaConf.create(kwargs)
     
+    # Add a synthetic validation argument to the config
     num_arguments = len(kwargs)
     config.number_of_arguments = num_arguments
+    
     dir_path = Path("./configs")
     file_name = f"{tab_name}.yaml"
     if not dir_path.exists():
@@ -25,6 +27,7 @@ def load_ui_config(tab_name, blank_items):
 
     config = OmegaConf.load(dest)
     
+    #Read and delete our validation argument if it exists
     num_args = config.get("number_of_arguments")
     if num_args:
         del config.number_of_arguments

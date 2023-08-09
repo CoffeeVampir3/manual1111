@@ -22,9 +22,9 @@ def run_t2i(model_path,
     device = "cuda"
     batch_size = int(batch_size)
     
-    pipe = load_diffusers_pipe(resolved_model_path, device)
+    pipe = load_diffusers_pipe(resolved_model_path, scheduler, device)
+    print(pipe.scheduler)
     
-    ##seed generator
     generator = get_rng_generator(device)
     if seed == -1: nseed = random.randint(0, (sys.maxsize/64)) #random seed
     else: nseed = seed

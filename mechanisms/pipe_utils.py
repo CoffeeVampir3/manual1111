@@ -35,12 +35,42 @@ def unload_current_pipe():
     torch.cuda.empty_cache()
     torch.cuda.synchronize()
     
-def load_diffusers_pipe(model_path, device):
+def load_scheduler(pipe, scheduler):
+    scheduler_dict = {
+        "_diffusers_version": "0.19.0.dev0",
+        "beta_end": 0.012,
+        "beta_schedule": "scaled_linear",
+        "beta_start": 0.00085,
+        "clip_sample": False,
+        "interpolation_type": "linear",
+        "num_train_timesteps": 1000,
+        "prediction_type": "epsilon",
+        "sample_max_value": 1.0,
+        "set_alpha_to_one": False,
+        "skip_prk_steps": True,
+        "steps_offset": 1,
+        "timestep_spacing": "leading",
+        "trained_betas": None,
+        "use_karras_sigmas": False
+    }
+
+    LOADED_PIPE.scheduler = scheduler.from_config(scheduler_dict) 
+    
+def load_diffusers_pipe(model_path, scheduler, device):
     global LOADED_PIPE
     global LOADED_MODEL_PATH
     torch.set_float32_matmul_precision('high')
     
-    if LOADED_PIPE and LOADED_MODEL_PATH and LOADED_MODEL_PATH == model_path:
+    #Check if there's already a loaded pipe that matches what kind of pipe we want.
+    if (LOADED_MODEL_PATH and
+        LOADED_MODEL_PATH == model_path and
+        LOADED_PIPE):
+        
+        #Check if the scheduler is the correct one we want
+        if ((not LOADED_PIPE.scheduler) or
+            LOADED_PIPE.scheduler.__class__.__name__ != scheduler.__class__.__name__):
+                load_scheduler(LOADED_PIPE, scheduler)
+        
         return LOADED_PIPE
     
     unload_current_pipe()
@@ -51,9 +81,11 @@ def load_diffusers_pipe(model_path, device):
             model_path, 
             torch_dtype=torch.bfloat16, 
             use_safetensors=True, 
-            variant="fp16", 
+            variant="fp16",
             add_watermarker=False)
         LOADED_PIPE.watermark = NoWatermarker()
+        
+        load_scheduler(LOADED_PIPE, scheduler)
         
         if is_xformers_available():
             try:

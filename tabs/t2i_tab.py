@@ -9,27 +9,27 @@ from mechanisms.killswitch import killswitch_engage
 
 def make_text_to_image_tab():
     with gr.Blocks() as interface:
-        available_models = get_available_from_leafs("models")
+        get_available_models = partial(get_available_from_leafs, "models")
         inputs = []
         with gr.Row():
             with gr.Column(scale=2):
-                model_path = gr.Dropdown(choices = available_models, label="Base model")
-                with gr.Accordion(label="Conditioning", open=True):
-                    with gr.Column():
-                        with gr.Group():
-                            with gr.Row():
-                                positive_prompt = gr.TextArea(value="", lines=3, label="Positive Prompt")
-                                keyword_prompt = gr.TextArea(value="", lines=3, label="Positive Keywords", visible=False) #Unused for now.
-                            with gr.Row():
-                                negative_prompt = gr.TextArea(value="", lines=3, label="Negative Prompt")
-                                negative_keyword_prompt = gr.TextArea(value="", lines=3, label="Negative Keywords", visible=False) #Unused for now.
-                            #conditioning = [positive_prompt, keyword_prompt, negative_prompt, negative_keyword_prompt]
-                            conditioning = [positive_prompt, positive_prompt, negative_prompt, negative_prompt]
+                with gr.Row():
+                    model_path = gr.Dropdown(choices = get_available_models(), label="Base model")
+                with gr.Column():
+                    with gr.Group():
+                        with gr.Row():
+                            positive_prompt = gr.TextArea(value="", lines=3, label="Positive Prompt", container=True)
+                            keyword_prompt = gr.TextArea(value="", lines=3, label="Positive Keywords", container=True, visible=False) #Unused for now.
+                        with gr.Row():
+                            negative_prompt = gr.TextArea(value="", lines=3, label="Negative Prompt", container=True)
+                            negative_keyword_prompt = gr.TextArea(value="", lines=3, label="Negative Keywords", container=True, visible=False) #Unused for now.
+                        #conditioning = [positive_prompt, keyword_prompt, negative_prompt, negative_keyword_prompt]
+                        conditioning = [positive_prompt, positive_prompt, negative_prompt, negative_prompt]
                 
                 with gr.Accordion(label="Config", open=True):
                     with gr.Group():
                         with gr.Row():
-                            seed = gr.Number(value=int(-1), label="Seed")
+                            seed = gr.Number(value=int(-1), label="Seed", precision=0)
                             classifier_free_guidance = gr.Slider(minimum=0.5, maximum=200.0, value=16.0, label="CFG")
                             generation_steps = gr.Slider(minimum=1, maximum=100, step=int(1), value=int(24), label="Steps")
                         with gr.Row():
@@ -38,7 +38,7 @@ def make_text_to_image_tab():
                         with gr.Row():
                             batch_size = gr.Slider(minimum=1, maximum=20, value=int(1), step=int(1), label="# Per Run")
                             number_of_batches = gr.Slider(minimum=1, maximum=20, value=int(1), step=int(1), label="Run This Many Times")
-                        scheduler_name = gr.Dropdown(choices = get_available_scheduler_names(), label="Scheduler")
+                        scheduler_name = gr.Dropdown(choices = get_available_scheduler_names(), label="Scheduler", value = "HeunDiscrete")
                         generating = [seed, classifier_free_guidance, generation_steps, image_width, image_height, batch_size, number_of_batches, scheduler_name]
                 with gr.Column():
                     with gr.Row():

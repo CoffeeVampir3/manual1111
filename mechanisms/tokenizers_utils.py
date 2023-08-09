@@ -1,5 +1,37 @@
 import torch
 
+def weigh_embeddings(tokenizer, prompt, text_embeddings, device):
+    #Create an unweighted set of weights
+    weights = torch.full(text_embeddings.shape, 1.0, device=device)
+
+    tokens = tokenizer.tokenize(prompt)
+
+    #add token weights using a simple moving sum of brackets
+    current_weight = 1.0
+    bracket_weight = 5.0
+    any_weights = False
+    for index, token in enumerate(tokens):
+        positive_direction = token.count('(') + token.count(']')
+        negative_direction = token.count('[') + token.count(')')
+        
+        bracket_count = positive_direction - negative_direction
+        current_weight += bracket_count * bracket_weight
+        
+        if bracket_count == 0:
+            weights[..., index+1] = current_weight
+            any_weights = True
+            print(token, current_weight)
+
+    if not any_weights:
+        return text_embeddings
+    
+    #Re-mean the weights to restore the original mean.
+    weighted_embeddings = text_embeddings * weights
+    normalization_factor = text_embeddings.mean() / weighted_embeddings.mean()
+    weighted_embeddings *= normalization_factor
+
+    return weighted_embeddings
+
 @torch.no_grad()
 def encode_line(text, tokenizer, text_encoder, device):
     text_inputs = tokenizer(text, padding="max_length", max_length=tokenizer.model_max_length, truncation=True, return_tensors="pt")
@@ -10,7 +42,9 @@ def encode_line(text, tokenizer, text_encoder, device):
         text_input_ids.to(device),
         output_hidden_states=True,
     )
-    return prompt_embeds[0], prompt_embeds.hidden_states[-2]
+    
+    weighted = weigh_embeddings(tokenizer, text, prompt_embeds[0], device)
+    return weighted, prompt_embeds.hidden_states[-2]
 
 @torch.no_grad()
 def encode_all(
