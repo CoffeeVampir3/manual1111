@@ -23,7 +23,10 @@ def load_ui_config(tab_name, blank_items):
     dest = (dir_path/file_name)
 
     if not dest.exists():
-        return {item: gr.skip() for item in blank_items} #Hack but it work
+        if blank_items:
+            return {item: gr.skip() for item in blank_items} #Hack but it work
+        else:
+            return None
 
     config = OmegaConf.load(dest)
     

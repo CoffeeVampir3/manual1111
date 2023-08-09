@@ -5,6 +5,9 @@ __pycache__
 models/*
 !models/*.txt
 
+vaes/*
+!vaes/*.txt
+
 __pycache__/
 
 outputs/*

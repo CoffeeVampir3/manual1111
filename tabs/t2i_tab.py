@@ -9,7 +9,7 @@ from mechanisms.killswitch import killswitch_engage
 
 def make_text_to_image_tab():
     with gr.Blocks() as interface:
-        get_available_models = partial(get_available_from_leafs, "models")
+        get_available_models = partial(get_available_from_leafs, "models", [".safetensors"])
         inputs = []
         with gr.Row():
             with gr.Column(scale=2):

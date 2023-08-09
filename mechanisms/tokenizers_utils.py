@@ -2,6 +2,9 @@ import torch
 
 @torch.no_grad()
 def weigh_embeddings(tokenizer, prompt, text_embeddings, device, debug=False):
+    #One major note is that there's an additional token at 1 and 77 which are system control tokens
+    #So our index starts at index+1 because the first token is a control token.
+    
     #Create an unweighted set of weights
     weights = torch.ones(1, 77, 1, device=device)
 
@@ -18,7 +21,7 @@ def weigh_embeddings(tokenizer, prompt, text_embeddings, device, debug=False):
         bracket_direction += positive_direction - negative_direction
         current_weight = 1.0 + bracket_direction * bracket_weight
         
-        if positive_direction != 0 or negative_direction != 0: #weight brackets as weight of 1
+        if positive_direction != 0 or negative_direction != 0: #weight brackets as weight of 0, in the future we should delete them from the prompt to save the token count.
             debug_weights.append(0)
             weights[0][index+1] = 0
             continue

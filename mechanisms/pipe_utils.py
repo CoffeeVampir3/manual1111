@@ -3,6 +3,10 @@ from diffusers import StableDiffusionXLPipeline, StableDiffusionXLImg2ImgPipelin
 from PIL import Image
 import os, gc, random, sys, json, random, time
 from diffusers.utils.import_utils import is_xformers_available
+from shared.running_config import get_config
+import logging
+
+logging.basicConfig(level=logging.ERROR)
 
 class NoWatermarker:
     def __init__(self):
@@ -35,7 +39,42 @@ def unload_current_pipe():
     torch.cuda.empty_cache()
     torch.cuda.synchronize()
     
+def load_new_pipe(model_path, scheduler, device):
+    unload_current_pipe()
+    try:
+        LOADED_PIPE = StableDiffusionXLPipeline.from_single_file(
+            model_path, 
+            torch_dtype=torch.bfloat16, 
+            use_safetensors=True, 
+            variant="fp16",
+            add_watermarker=False)
+        LOADED_PIPE.watermark = NoWatermarker()
+        
+        LOADED_PIPE = load_scheduler(LOADED_PIPE, scheduler)
+        
+        if is_xformers_available():
+            try:
+                LOADED_PIPE.enable_xformers_memory_efficient_attention()
+            except:
+                pass
+        
+        LOADED_PIPE = load_vae(LOADED_PIPE, model_path, scheduler, device)
+        LOADED_PIPE.to(device)
+        #if device != "cpu":
+        #    LOADED_PIPE.enable_sequential_cpu_offload()
+        LOADED_MODEL_PATH = model_path
+        return LOADED_PIPE
+ 
+    except Exception as e:
+        logging.critical(f"Error loading the model {e}")
+        unload_current_pipe()
+    
+    return LOADED_PIPE
+    
 def load_scheduler(pipe, scheduler):
+    if (pipe.scheduler and
+    pipe.scheduler.__class__.__name__ == scheduler.__class__.__name__):
+        return pipe
     scheduler_dict = {
         "_diffusers_version": "0.19.0.dev0",
         "beta_end": 0.012,
@@ -56,6 +95,26 @@ def load_scheduler(pipe, scheduler):
 
     pipe.scheduler = scheduler.from_config(scheduler_dict) 
     return pipe
+ 
+def load_vae(pipe, model_path, scheduler, device):
+    use_fast_vae = get_config("use_fast_decoder")
+    if use_fast_vae and pipe.vae and pipe.vae.__class__.__name__ != "AutoencoderTiny":
+        from diffusers import AutoencoderTiny
+        new_vae = None
+        try:
+            new_vae = AutoencoderTiny.from_pretrained("vaes/taesdxl", torch_dtype=torch.bfloat16)
+        except:
+            pass
+        
+        if new_vae:
+            pipe.vae = new_vae
+            return pipe
+        
+        logging.critical("Wasn't able to load TAESDXL fast decoder. Run the install.py script to download it! Falling back to normal VAE")
+    if not pipe.vae:
+        pipe = load_new_pipe(model_path, scheduler, device)
+    pipe.enable_vae_tiling()
+    return pipe
     
 def load_diffusers_pipe(model_path, scheduler, device):
     global LOADED_PIPE
@@ -67,43 +126,11 @@ def load_diffusers_pipe(model_path, scheduler, device):
         LOADED_MODEL_PATH == model_path and
         LOADED_PIPE):
         
-        #Check if the scheduler is the correct one we want
-        if ((not LOADED_PIPE.scheduler) or
-            LOADED_PIPE.scheduler.__class__.__name__ != scheduler.__class__.__name__):
-                load_scheduler(LOADED_PIPE, scheduler)
-        
+        LOADED_PIPE = load_scheduler(LOADED_PIPE, scheduler)
+        LOADED_PIPE = load_vae(LOADED_PIPE, model_path, scheduler, device)
         return LOADED_PIPE
     
-    unload_current_pipe()
-    
-    #load new pipe
-    try:
-        LOADED_PIPE = StableDiffusionXLPipeline.from_single_file(
-            model_path, 
-            torch_dtype=torch.bfloat16, 
-            use_safetensors=True, 
-            variant="fp16",
-            add_watermarker=False)
-        LOADED_PIPE.watermark = NoWatermarker()
-        
-        LOADED_PIPE = load_scheduler(LOADED_PIPE, scheduler)
-        
-        if is_xformers_available():
-            try:
-                LOADED_PIPE.enable_xformers_memory_efficient_attention()
-            except:
-                pass
-        
-        LOADED_PIPE.enable_vae_tiling()
-        LOADED_PIPE.to(device)
-        #if device != "cpu":
-        #    LOADED_PIPE.enable_sequential_cpu_offload()
-        LOADED_MODEL_PATH = model_path
-    except Exception as e:
-        print(f"Error loading the model: {e}")
-        unload_current_pipe()
-    
-    return LOADED_PIPE
+    return load_new_pipe(model_path, scheduler, device)
 
 global GENERATOR
 GENERATOR = None

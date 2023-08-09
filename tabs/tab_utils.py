@@ -1,4 +1,5 @@
 import os, sys
+import glob
 import torch
 
 def find_leaf_directories(parent_directory):
@@ -9,18 +10,18 @@ def find_leaf_directories(parent_directory):
             leaf_directories.append(item.path)
     return leaf_directories
 
-def find_leaf_files(parent_directory):
+def find_leaf_files(parent_directory, valid_extensions=['*']):
+    valid_extensions = [ext if ext.startswith('.') else '.' + ext for ext in valid_extensions]
     files = []
-    for item in os.scandir(parent_directory):
-        if item.is_file():
-            files.append(item.path)
+    for ext in valid_extensions:
+        files.extend(glob.glob(os.path.join(parent_directory, '*' + ext)))
     return files
 
 def get_available_from_dir(target):
     return [os.path.basename(x) for x in find_leaf_directories(target)]
 
-def get_available_from_leafs(target):
-    return [os.path.basename(x) for x in find_leaf_files(target)]
+def get_available_from_leafs(target, valid_extensions=['*']):
+    return [os.path.basename(x) for x in find_leaf_files(target, valid_extensions)]
 
 def get_available_devices():
     cuda_devices = "Use only CUDA Devices: "
