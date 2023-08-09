@@ -20,7 +20,6 @@ def weigh_embeddings(tokenizer, prompt, text_embeddings, device):
         if bracket_count == 0:
             weights[..., index+1] = current_weight
             any_weights = True
-            print(token, current_weight)
 
     if not any_weights:
         return text_embeddings
