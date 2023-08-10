@@ -2,7 +2,6 @@ import gradio as gr
 import os
 from functools import partial
 from shared.running_config import set_config
-from shared.config_utils import save_ui_config, load_ui_config
 from shared.config_utils import save_json_configs, load_json_configs
 
 EXIF_TAB_NAME = "exif_settings_json" 
