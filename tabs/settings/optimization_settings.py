@@ -27,6 +27,8 @@ def hacked_load(compilation_method, optimize_for):
 def make_optimization_settings():
     with gr.Blocks() as interface:
         with gr.Box():
+            gr.Label(value="""Use a torch compiler to dramatically increase generation speed. There's some caveats though, changing some parameters might trigger a re-compilation.
+                     This is an experimental torch feature, so be warned that you might have issues when using this.""")
             with gr.Row():
                 #inductor seems to be bugged, need to debug
                 compilation_method = gr.Dropdown(choices=["None", "inductor", "eager", "aot_eager"], value="None", label="Use Compilation Method")
