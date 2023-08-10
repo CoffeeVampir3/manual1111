@@ -6,7 +6,7 @@ from mechanisms.image_utils import save_images, in_memory_encode_exif
 from datetime import datetime
 from mechanisms.tokenizers_utils import encode_from_pipe
 from dataclasses import dataclass
-from shared.config_utils import save_ui_config
+from shared.config_utils import save_json_configs
 from mechanisms.killswitch import killswitch_callback, KillswitchEngaged
 
 def run_t2i(model_path, 
@@ -15,7 +15,7 @@ def run_t2i(model_path,
         batch_size, number_of_batches, scheduler_name):
     
     t2i_data = locals()
-    save_ui_config("text_to_image_v1", **t2i_data)
+    save_json_configs("text_to_image_v1", **t2i_data)
     
     scheduler = get_scheduler_by_name(scheduler_name)
     resolved_model_path = get_path_from_leaf("models", model_path)

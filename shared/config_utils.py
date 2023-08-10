@@ -1,44 +1,31 @@
 from omegaconf import OmegaConf
 from pathlib import Path
 import gradio as gr
-
-def save_ui_config(tab_name, **kwargs):
-    config = OmegaConf.create(kwargs)
-    
-    # Add a synthetic validation argument to the config
-    num_arguments = len(kwargs)
-    config.number_of_arguments = num_arguments
-    
-    dir_path = Path("./configs")
-    file_name = f"{tab_name}.yaml"
-    if not dir_path.exists():
-        dir_path.mkdir()
-    dest = (dir_path/file_name)
-    OmegaConf.save(config=config, f=dest)
-    return config
-
-def load_ui_config(tab_name, blank_items):
-    dir_path = Path("./configs")
-    file_name = f"{tab_name}.yaml"
-    dest = (dir_path/file_name)
-
-    if not dest.exists():
-        if blank_items:
-            return {item: gr.skip() for item in blank_items} #Hack but it work
-        else:
-            return None
-
-    config = OmegaConf.load(dest)
-    
-    #Read and delete our validation argument if it exists
-    num_args = config.get("number_of_arguments")
-    if num_args:
-        del config.number_of_arguments
+import os, json
+ 
+def save_json_configs(tab_name, **kwargs):
+    if not os.path.exists('configs'):
+        os.makedirs('configs', exist_ok=True)
         
-    values = list(OmegaConf.to_container(config, resolve=True).values())
-    num_values = len(values)
-    if not num_args or num_args != num_values:
-        print(f"Found an outdated/mismatched config for: {tab_name} - unable to load it.")
-        return {item: gr.skip() for item in blank_items}
+    with open(f'configs/{tab_name}.json', 'w') as f:
+        json.dump(kwargs, f)
+        
+def load_json_configs(tab_name, **kwargs):
+    dir_path = Path("./configs")
+    file_name = f"{tab_name}.json"
+    dest = (dir_path/file_name)
     
-    return values
+    if not dest.exists():
+        return [gr.skip()] * len(kwargs)
+
+    with open(dest, 'r') as f:
+        loaded_args = json.load(f)
+    
+    results = []
+    for key, default_value in kwargs.items():
+        if key in loaded_args:
+            results.append(gr.update(value=loaded_args[key]))
+        else:
+            results.append(gr.skip())
+            
+    return results

@@ -3,8 +3,9 @@ import os
 from functools import partial
 from shared.running_config import set_config
 from shared.config_utils import save_ui_config, load_ui_config
+from shared.config_utils import save_json_configs, load_json_configs
 
-EXIF_TAB_NAME = "exif_settings_v1"
+EXIF_TAB_NAME = "exif_settings_json" 
 
 def update_config(write_exif, write_tags):
     choices = []
@@ -15,13 +16,17 @@ def update_config(write_exif, write_tags):
 def update_tag_config(write_exif, write_tags):
     ui_state = locals()
     update_config(write_exif, write_tags)
-    save_ui_config(EXIF_TAB_NAME, **ui_state)
+    save_json_configs(EXIF_TAB_NAME, **ui_state)
         
 def change_write_exif(choice):
     return gr.update(
         visible=choice, 
         value = "Write Image Description" if choice else None)
     
+def hacked_load(write_exif, write_tags):
+    ui_state = locals()
+    return load_json_configs(EXIF_TAB_NAME, **ui_state)
+
 def make_exif_settings():
     with gr.Blocks() as interface:
         with gr.Box():
@@ -32,11 +37,8 @@ def make_exif_settings():
 
             ui_items = [write_exif, write_tags]
     
-    load_config = partial(load_ui_config, EXIF_TAB_NAME, ui_items)
-    interface.load(load_config, inputs=None, outputs=ui_items)
-    interface.load(update_config, inputs=ui_items, outputs=None)
+    interface.load(hacked_load, inputs=ui_items, outputs=ui_items)
     
-    #Make sure to do this after load or else infinite loop.
     write_exif.change(fn=change_write_exif, inputs = write_exif, outputs=write_tags)
     write_tags.change(fn=update_tag_config, inputs = ui_items)
     

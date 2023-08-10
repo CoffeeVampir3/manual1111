@@ -3,9 +3,18 @@ import os
 from tabs.tab_utils import get_available_from_dir, get_available_from_leafs
 from mechanisms.t2i import run_t2i
 from shared.scheduler_utils import get_available_scheduler_names
-from shared.config_utils import load_ui_config
+from shared.config_utils import load_json_configs
 from functools import partial
 from mechanisms.killswitch import killswitch_engage
+
+T2I_TAB_NAME = "text_to_image_v1"
+
+def hacked_load(model_path, 
+        positive_prompt, keyword_prompt, negative_prompt, negative_keyword_prompt,
+        seed, classifier_free_guidance, generation_steps, image_width, image_height,
+        batch_size, number_of_batches, scheduler_name):
+    ui_state = locals()
+    return load_json_configs(T2I_TAB_NAME, **ui_state)
 
 def make_text_to_image_tab():
     with gr.Blocks() as interface:
@@ -53,8 +62,7 @@ def make_text_to_image_tab():
                     allow_preview=True)
 
     inputs = [model_path, *conditioning, *generating]
-    load_config = partial(load_ui_config, "text_to_image_v1", inputs)
-    interface.load(load_config, inputs=None, outputs=inputs)
+    interface.load(hacked_load, inputs=inputs, outputs=inputs)
     submit.click(fn=run_t2i, inputs=inputs, outputs=output_gallery)
     
     return interface
