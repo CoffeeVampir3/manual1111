@@ -42,7 +42,7 @@ def weigh_embeddings(tokenizer, prompt, text_embeddings, device, debug=False):
             print((f"""
                     Index: {i:<2}
                     Token: {x:<18} 
-                    Weight: y
+                    Weight: {y}
                     Weight tensor: {weights[0][i].item()},
                     Embedding Mean: {weighted_embeddings[0][i].mean().item()}"""))
 
