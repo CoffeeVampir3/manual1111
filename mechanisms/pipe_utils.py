@@ -40,6 +40,8 @@ def unload_current_pipe():
     torch.cuda.synchronize()
     
 def load_new_pipe(model_path, scheduler, device):
+    global LOADED_PIPE
+    global LOADED_MODEL_PATH
     unload_current_pipe()
     try:
         LOADED_PIPE = StableDiffusionXLPipeline.from_single_file(
@@ -48,21 +50,31 @@ def load_new_pipe(model_path, scheduler, device):
             use_safetensors=True, 
             variant="fp16",
             add_watermarker=False)
+        LOADED_MODEL_PATH = model_path
         LOADED_PIPE.watermark = NoWatermarker()
         
         LOADED_PIPE = load_scheduler(LOADED_PIPE, scheduler)
         
-        if is_xformers_available():
+        LOADED_PIPE = load_vae(LOADED_PIPE, model_path, scheduler, device)
+        
+        compilation_method = get_config("compilation_method")
+        optimization_type = get_config("optimize_for")
+        logging.critical(f"{compilation_method} {optimization_type}")
+        if compilation_method:
+            logging.critical(f"{compilation_method} {optimization_type}")
+            if compilation_method == "inductor":
+                LOADED_PIPE.unet = torch.compile(LOADED_PIPE.unet, mode=optimization_type, backend=compilation_method)
+            LOADED_PIPE.unet = torch.compile(LOADED_PIPE.unet, backend=compilation_method)
+            
+        elif is_xformers_available():
             try:
                 LOADED_PIPE.enable_xformers_memory_efficient_attention()
             except:
                 pass
-        
-        LOADED_PIPE = load_vae(LOADED_PIPE, model_path, scheduler, device)
+
         LOADED_PIPE.to(device)
         #if device != "cpu":
         #    LOADED_PIPE.enable_sequential_cpu_offload()
-        LOADED_MODEL_PATH = model_path
         return LOADED_PIPE
  
     except Exception as e:
@@ -113,7 +125,8 @@ def load_vae(pipe, model_path, scheduler, device):
         logging.critical("Wasn't able to load TAESDXL fast decoder. Run the install.py script to download it! Falling back to normal VAE")
     if not pipe.vae:
         pipe = load_new_pipe(model_path, scheduler, device)
-    pipe.enable_vae_tiling()
+    elif pipe.vae.__class__.__name__ != "AutoencoderTiny":
+        pipe.enable_vae_tiling()
     return pipe
     
 def load_diffusers_pipe(model_path, scheduler, device):

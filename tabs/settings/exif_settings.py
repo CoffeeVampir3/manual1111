@@ -1,6 +1,5 @@
 import gradio as gr
 import os
-from functools import partial
 from shared.running_config import set_config
 from shared.config_utils import save_json_configs, load_json_configs
 
