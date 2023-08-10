@@ -9,13 +9,15 @@ from dataclasses import dataclass
 from shared.config_utils import save_json_configs
 from mechanisms.killswitch import killswitch_callback, KillswitchEngaged
 
+T2I_TAB_NAME = "text_to_image_v1"
+
 def run_t2i(model_path, 
         positive_prompt, keyword_prompt, negative_prompt, negative_keyword_prompt,
         seed, classifier_free_guidance, generation_steps, image_width, image_height,
         batch_size, number_of_batches, scheduler_name):
     
     t2i_data = locals()
-    save_json_configs("text_to_image_v1", **t2i_data)
+    save_json_configs(T2I_TAB_NAME, **t2i_data)
     
     scheduler = get_scheduler_by_name(scheduler_name)
     resolved_model_path = get_path_from_leaf("models", model_path)

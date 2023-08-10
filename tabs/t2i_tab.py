@@ -1,13 +1,11 @@
 import gradio as gr
 import os
 from tabs.tab_utils import get_available_from_dir, get_available_from_leafs
-from mechanisms.t2i import run_t2i
+from mechanisms.t2i import run_t2i, T2I_TAB_NAME
 from shared.scheduler_utils import get_available_scheduler_names
 from shared.config_utils import load_json_configs
 from functools import partial
 from mechanisms.killswitch import killswitch_engage
-
-T2I_TAB_NAME = "text_to_image_v1"
 
 def hacked_load(model_path, 
         positive_prompt, keyword_prompt, negative_prompt, negative_keyword_prompt,
