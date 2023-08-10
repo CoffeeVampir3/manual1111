@@ -28,8 +28,9 @@ def make_optimization_settings():
     with gr.Blocks() as interface:
         with gr.Box():
             with gr.Row():
+                #inductor seems to be bugged, need to debug
                 compilation_method = gr.Dropdown(choices=["None", "inductor", "eager", "aot_eager"], value="None", label="Use Compilation Method")
-                optimize_for = gr.Dropdown(choices=["Memory Efficiency", "Speed", "Maximized (Potentially Very slow startup)"], value="Speed", label="Optimize For")
+                optimize_for = gr.Dropdown(choices=["Memory Efficiency", "Speed", "Maximized (Potentially Very slow startup)"], value="Speed", label="Optimize For (Inductor only)")
         
             ui_items = [compilation_method, optimize_for]
     

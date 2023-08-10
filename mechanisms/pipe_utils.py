@@ -6,7 +6,7 @@ from diffusers.utils.import_utils import is_xformers_available
 from shared.running_config import get_config
 import logging
 
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.WARN)
 
 class NoWatermarker:
     def __init__(self):
@@ -59,12 +59,13 @@ def load_new_pipe(model_path, scheduler, device):
         
         compilation_method = get_config("compilation_method")
         optimization_type = get_config("optimize_for")
-        logging.critical(f"{compilation_method} {optimization_type}")
         if compilation_method:
-            logging.critical(f"{compilation_method} {optimization_type}")
             if compilation_method == "inductor":
+                logging.warn(f"Compiler set: {compilation_method} {optimization_type}")
                 LOADED_PIPE.unet = torch.compile(LOADED_PIPE.unet, mode=optimization_type, backend=compilation_method)
-            LOADED_PIPE.unet = torch.compile(LOADED_PIPE.unet, backend=compilation_method)
+            else:
+                logging.warn(f"Compiler set: {compilation_method}")
+                LOADED_PIPE.unet = torch.compile(LOADED_PIPE.unet, backend=compilation_method)
             
         elif is_xformers_available():
             try:
