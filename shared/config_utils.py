@@ -15,6 +15,9 @@ def load_json_impl(dest, **kwargs):
     with open(dest, 'r') as f:
         loaded_args = json.load(f)
     
+    if not kwargs:
+        return loaded_args
+    
     results = []
     for key, default_value in kwargs.items():
         if key in loaded_args:
@@ -63,14 +66,15 @@ def save_or_load_gradio_values(op, tab_name, local_components_dict, update_confi
     for key, value in zip(local_components_dict, resolved_component_list):
         ui_state[key] = value
         
-    if update_config_func:
-        update_config_func(**ui_state)
-        
     if op == "load":
+        if update_config_func:
+            update_config_func()
         return load_json_configs(tab_name, **ui_state)
     elif op == "default":
         return load_default_json_configs(tab_name, **ui_state)
-
+    
+    if update_config_func:
+        update_config_func(**ui_state)
     save_json_configs(tab_name, **ui_state)
     
 def make_config_functions(tab_name, local_components_dict, update_config_func):

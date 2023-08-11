@@ -4,11 +4,9 @@ from PIL import Image
 import os, gc, random, sys, json, random, time
 from diffusers.utils.import_utils import is_xformers_available
 from shared.running_config import get_config
-import logging
+from shared.log import logging
 from shared.scheduler_utils import get_name_by_scheduler
 from functools import partial
-
-logging.basicConfig(level=logging.WARN)
 
 class NoWatermarker:
     def __init__(self):
@@ -45,6 +43,8 @@ def load_new_pipe(model_path, scheduler, device):
     global LOADED_PIPE
     global LOADED_MODEL_PATH
     unload_current_pipe()
+    
+    from shared.running_config import debug_config
     try:
         load_pipe_func = StableDiffusionXLPipeline.from_single_file
         

@@ -2,10 +2,14 @@ import gradio as gr
 import os
 from shared.running_config import set_config
 from functools import partial
-from shared.config_utils import make_config_functions, get_component_dictionary
+from shared.config_utils import make_config_functions, get_component_dictionary, load_json_configs
 from shared.scheduler_utils import get_available_scheduler_names
+from shared.log import logging
 
-def update_config(scheduler_name, **kwargs):
+def update_scheduler_config(scheduler_name, **kwargs):
+    if not kwargs:
+        #logging.debug("Loading from file...")
+        kwargs = load_json_configs(scheduler_name)
     scheduler_settings = {
         "trained_betas": None,
         "timestep_spacing": "leading",
@@ -13,7 +17,12 @@ def update_config(scheduler_name, **kwargs):
     
     scheduler_settings.update(kwargs)
     set_config(scheduler_name, scheduler_settings)
-    print(f"Updated {scheduler_name} configs!")
+    #logging.debug(f"Updated {scheduler_name} configs! {scheduler_settings}")
+    
+def load_scheduler_config():
+    names = get_available_scheduler_names()
+    for name in names:
+        update_scheduler_config(name)
 
 def make_singular_scheduler_tab(scheduler_name, base_scheduler_settings):
     with gr.Blocks() as interface:
@@ -48,7 +57,7 @@ def make_singular_scheduler_tab(scheduler_name, base_scheduler_settings):
         steps_offset
     ]
     
-    scheduler_configurator = partial(update_config, scheduler_name)
+    scheduler_configurator = partial(update_scheduler_config, scheduler_name)
     comp_dict = get_component_dictionary(locals())
     save, load, default = make_config_functions(scheduler_name, comp_dict, scheduler_configurator)
     

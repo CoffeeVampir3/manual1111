@@ -1,7 +1,7 @@
 import gradio as gr
 import argparse
 from tabs.t2i_tab import make_text_to_image_tab
-from tabs.config_tab import make_config_tab
+from tabs.config_tab import make_config_tab, load_all_configs
 from functools import partial
 
 custom_css = (""".gradio-container {
@@ -34,7 +34,9 @@ if __name__ == '__main__':
     args = get_cli_args()
     bound_launch = bind_launch_args(interface, args)
     interface.queue()
+    load_all_configs()
     bound_launch()
     exit()
 #support for gradio launch debugger
+load_all_configs()
 interface.queue().launch(quiet=False)

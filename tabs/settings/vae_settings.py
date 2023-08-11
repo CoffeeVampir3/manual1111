@@ -1,14 +1,18 @@
 import gradio as gr
 import os
 from shared.running_config import set_config
-from shared.config_utils import make_config_functions, get_component_dictionary
+from shared.config_utils import make_config_functions, get_component_dictionary, load_json_configs
+from shared.log import logging
 
 VAE_TAB_NAME = "vae_settings_v1"
 
-def update_config(**kwargs):
+def update_vae_config(**kwargs):
+    if not kwargs:
+        logging.debug("Loading from file...")
+        kwargs = load_json_configs(VAE_TAB_NAME)
     use_fast_decoder = kwargs["use_fast_decoder"]
     set_config("use_fast_decoder", use_fast_decoder)
-    print("Updated VAE Config")
+    logging.debug(f"Updated VAE Config {use_fast_decoder}")
     
 def make_vae_settings():        
     with gr.Blocks() as interface:
@@ -17,7 +21,7 @@ def make_vae_settings():
             ui_items = [use_fast_decoder]
     
     comp_dict = get_component_dictionary(locals())
-    save, load, default = make_config_functions(VAE_TAB_NAME, comp_dict, update_config)
+    save, load, default = make_config_functions(VAE_TAB_NAME, comp_dict, update_vae_config)
     
     interface.load(load, inputs=ui_items, outputs=ui_items)
     

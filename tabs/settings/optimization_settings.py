@@ -1,11 +1,15 @@
 import gradio as gr
 import os
 from shared.running_config import set_config
-from shared.config_utils import make_config_functions, get_component_dictionary
+from shared.config_utils import make_config_functions, get_component_dictionary, load_json_configs
+from shared.log import logging
 
 OPTIMIZATION_TAB_NAME = "optimization_settings_v1"
 
-def update_config(**kwargs):
+def update_optimiazation_config(**kwargs):
+    if not kwargs:
+        logging.debug("Loading from file...")
+        kwargs = load_json_configs(OPTIMIZATION_TAB_NAME)
     compilation_method, optimize_for = kwargs["compilation_method"], kwargs["optimize_for"]
     if compilation_method == "None": compilation_method = None
     set_config("compilation_method", compilation_method)
@@ -16,7 +20,7 @@ def update_config(**kwargs):
     if optimize_for == "Maximized (Potentially Very slow startup)": optim_target = "max-autotune"
     set_config("optimize_for", optim_target)
     
-    print("Updated optimization config.")
+    logging.debug(f"Updated optimization config {compilation_method} {optim_target}")
 
 def make_optimization_settings():
     with gr.Blocks() as interface:
@@ -31,7 +35,7 @@ def make_optimization_settings():
             ui_items = [compilation_method, optimize_for]
     
     comp_dict = get_component_dictionary(locals())
-    save, load, default = make_config_functions(OPTIMIZATION_TAB_NAME, comp_dict, update_config)
+    save, load, default = make_config_functions(OPTIMIZATION_TAB_NAME, comp_dict, update_optimiazation_config)
     
     interface.load(load, inputs=ui_items, outputs=ui_items)
     
