@@ -4,7 +4,7 @@ from PIL import Image
 import os, gc, random, sys, json, random, time
 from diffusers.utils.import_utils import is_xformers_available
 from shared.running_config import get_config
-from shared.log import logging
+from shared.log import vampire_log
 from shared.scheduler_utils import get_name_by_scheduler
 from functools import partial
 
@@ -17,12 +17,15 @@ class NoWatermarker:
 
 global LOADED_PIPE
 global LOADED_MODEL_PATH
+global CURRENT_COMPILATION_METHOD
 LOADED_PIPE = None
 LOADED_MODEL_PATH = None
+CURRENT_COMPILATION_METHOD = None
 
 def unload_current_pipe():
     global LOADED_PIPE
     global LOADED_MODEL_PATH
+    global CURRENT_COMPILATION_METHOD
     
     if LOADED_PIPE:
         for x in LOADED_PIPE.__module__:
@@ -31,6 +34,7 @@ def unload_current_pipe():
         
     LOADED_PIPE = None
     LOADED_MODEL_PATH = None
+    CURRENT_COMPILATION_METHOD = None
 
     torch.cuda.empty_cache()
     torch.cuda.synchronize()
@@ -63,24 +67,8 @@ def load_new_pipe(model_path, scheduler, device):
         LOADED_PIPE.watermark = NoWatermarker()
         
         LOADED_PIPE = load_scheduler(LOADED_PIPE, scheduler)
-        
         LOADED_PIPE = load_vae(LOADED_PIPE, model_path, scheduler, device)
-        
-        compilation_method = get_config("compilation_method")
-        optimization_type = get_config("optimize_for")
-        if compilation_method:
-            if compilation_method == "inductor":
-                logging.warn(f"Compiler set: {compilation_method} {optimization_type}")
-                LOADED_PIPE.unet = torch.compile(LOADED_PIPE.unet, mode=optimization_type, backend=compilation_method)
-            else:
-                logging.warn(f"Compiler set: {compilation_method}")
-                LOADED_PIPE.unet = torch.compile(LOADED_PIPE.unet, backend=compilation_method)
-            
-        elif is_xformers_available():
-            try:
-                LOADED_PIPE.enable_xformers_memory_efficient_attention()
-            except:
-                pass
+        LOADED_PIPE = load_compiler(LOADED_PIPE, model_path, scheduler, device)
 
         LOADED_PIPE.to(device)
         #if device != "cpu":
@@ -88,22 +76,52 @@ def load_new_pipe(model_path, scheduler, device):
         return LOADED_PIPE
  
     except Exception as e:
-        logging.critical(f"Error loading the model {e}")
+        vampire_log.critical(f"Error loading the model {e}")
         unload_current_pipe()
     
     return LOADED_PIPE
+
+def load_compiler(pipe, model_path, scheduler, device):
+    global CURRENT_COMPILATION_METHOD
+    compilation_method = get_config("compilation_method")
+    optimization_type = get_config("optimize_for")
+    
+    if CURRENT_COMPILATION_METHOD and CURRENT_COMPILATION_METHOD == compilation_method:
+        return pipe
+    
+    if CURRENT_COMPILATION_METHOD != None:
+        #Safe because unload_current_pipe resets the current compilation method after unloading.
+        return load_new_pipe(model_path, scheduler, device)
+    
+    if compilation_method:
+        compile_func = partial(torch.compile, backend=compilation_method)
+        if compilation_method == "inductor":
+            compile_func = partial(compile_func, mode=optimization_type)
+        else:
+            optimization_type = None
+        pipe.unet = compile_func(pipe.unet)
+        vampire_log.warn(f"Compiler set: {compilation_method} {optimization_type}")
+        
+    elif is_xformers_available():
+        try:
+            pipe.enable_xformers_memory_efficient_attention()
+        except:
+            pass
+    
+    CURRENT_COMPILATION_METHOD = compilation_method
+    return pipe
     
 def load_scheduler(pipe, scheduler):
     if (pipe.scheduler and 
         pipe.scheduler.__class__.__name__ == scheduler.__name__):
             return pipe
     
-    logging.warn("Loading a new scheduler.")
+    vampire_log.warn("Loading a new scheduler.")
     scheduler_name = get_name_by_scheduler(scheduler)
     scheduler_config = get_config(scheduler_name)
     
     if not scheduler_config:
-        logging.warn("No scheduler config found, using default.")
+        vampire_log.warn("No scheduler config found, using default.")
         scheduler_config = {
             "beta_end": 0.012,
             "beta_schedule": "scaled_linear",
@@ -130,9 +148,12 @@ def load_vae(pipe, model_path, scheduler, device):
             pipe.vae = AutoencoderTiny.from_pretrained("vaes/taesdxl", torch_dtype=torch.bfloat16)
             return pipe
         except:
-            logging.critical("Wasn't able to load TAESDXL fast decoder. Run the install.py script to download it! Falling back to normal VAE...")
+            vampire_log.critical("Wasn't able to load TAESDXL fast decoder. Run the install.py script to download it! Forcing config to normal VAE, falling back to normal VAE...")
+            from shared.running_config import set_config
+            set_config("use_fast_decoder", False)
         
     if not pipe.vae:
+        #This is not an infinite loop because we force the config to use the normal vae in case it failed to load.
         pipe = load_new_pipe(model_path, scheduler, device)
     
     if pipe.vae.__class__.__name__ != "AutoencoderTiny":
@@ -153,6 +174,7 @@ def load_diffusers_pipe(model_path, scheduler, device):
         
         LOADED_PIPE = load_scheduler(LOADED_PIPE, scheduler)
         LOADED_PIPE = load_vae(LOADED_PIPE, model_path, scheduler, device)
+        LOADED_PIPE = load_compiler(LOADED_PIPE, model_path, scheduler, device)
         return LOADED_PIPE
     
     return load_new_pipe(model_path, scheduler, device)

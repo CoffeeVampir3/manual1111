@@ -2,13 +2,13 @@ import gradio as gr
 import os
 from shared.running_config import set_config
 from shared.config_utils import make_config_functions, get_component_dictionary, load_json_configs
-from shared.log import logging
+from shared.log import vampire_log
 
 OPTIMIZATION_TAB_NAME = "optimization_settings_v1"
 
 def update_optimiazation_config(**kwargs):
     if not kwargs:
-        logging.debug("Loading from file...")
+        vampire_log.debug("Loading from file...")
         kwargs = load_json_configs(OPTIMIZATION_TAB_NAME)
     compilation_method, optimize_for = kwargs["compilation_method"], kwargs["optimize_for"]
     if compilation_method == "None": compilation_method = None
@@ -20,7 +20,7 @@ def update_optimiazation_config(**kwargs):
     if optimize_for == "Maximized (Potentially Very slow startup)": optim_target = "max-autotune"
     set_config("optimize_for", optim_target)
     
-    logging.debug(f"Updated optimization config {compilation_method} {optim_target}")
+    vampire_log.debug(f"Updated optimization config {compilation_method} {optim_target}")
 
 def make_optimization_settings():
     with gr.Blocks() as interface:

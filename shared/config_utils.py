@@ -68,12 +68,14 @@ def save_or_load_gradio_values(op, tab_name, local_components_dict, update_confi
         
     if op == "load":
         if update_config_func:
+            #With no arguments, update func will load from file.
             update_config_func()
         return load_json_configs(tab_name, **ui_state)
     elif op == "default":
         return load_default_json_configs(tab_name, **ui_state)
     
     if update_config_func:
+        #With arguments, update func will update from the gradio components
         update_config_func(**ui_state)
     save_json_configs(tab_name, **ui_state)
     

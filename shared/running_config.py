@@ -1,4 +1,4 @@
-from shared.log import logging
+from shared.log import vampire_log
 
 global RUNNING_CONFIG
 RUNNING_CONFIG = {}
@@ -11,4 +11,4 @@ def set_config(config_name, value):
     
 def debug_config():
     for x,y in RUNNING_CONFIG.items():
-        logging.debug(f"{x} {y}")
+        vampire_log.debug(f"{x} {y}")

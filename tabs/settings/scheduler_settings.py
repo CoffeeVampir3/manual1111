@@ -4,11 +4,11 @@ from shared.running_config import set_config
 from functools import partial
 from shared.config_utils import make_config_functions, get_component_dictionary, load_json_configs
 from shared.scheduler_utils import get_available_scheduler_names
-from shared.log import logging
+from shared.log import vampire_log
 
 def update_scheduler_config(scheduler_name, **kwargs):
     if not kwargs:
-        #logging.debug("Loading from file...")
+        #vampire_log.debug("Loading from file...")
         kwargs = load_json_configs(scheduler_name)
     scheduler_settings = {
         "trained_betas": None,
@@ -17,7 +17,7 @@ def update_scheduler_config(scheduler_name, **kwargs):
     
     scheduler_settings.update(kwargs)
     set_config(scheduler_name, scheduler_settings)
-    #logging.debug(f"Updated {scheduler_name} configs! {scheduler_settings}")
+    #vampire_log.debug(f"Updated {scheduler_name} configs! {scheduler_settings}")
     
 def load_scheduler_config():
     names = get_available_scheduler_names()

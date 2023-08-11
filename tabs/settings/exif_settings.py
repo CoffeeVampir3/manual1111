@@ -2,20 +2,20 @@ import gradio as gr
 import os
 from shared.running_config import set_config
 from shared.config_utils import make_config_functions, get_component_dictionary, load_json_configs
-from shared.log import logging
+from shared.log import vampire_log
 
 EXIF_TAB_NAME = "exif_settings_v1" 
 
 def update_exif_config(**kwargs):
     if not kwargs:
-        logging.debug("Loading from file...")
+        vampire_log.debug("Loading from file...")
         kwargs = load_json_configs(EXIF_TAB_NAME)
     write_tags = kwargs["write_tags"]
     choices = []
     if "Write User Comment (Same as Automatic1111)" in write_tags: choices.append(37510)
     if "Write Image Description" in write_tags: choices.append(270)
     set_config("exif_tags", choices)
-    logging.debug(f"Updated EXIF config {choices}")
+    vampire_log.debug(f"Updated EXIF config {choices}")
 
 def make_exif_settings():
     with gr.Blocks() as interface:
