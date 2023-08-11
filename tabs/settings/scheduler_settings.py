@@ -6,9 +6,8 @@ from shared.config_utils import get_config_save_load, get_component_dictionary
 
 def update_config(scheduler_name, **kwargs):
     scheduler_settings = {
-        "scheduler_name": scheduler_name,
-        "trained_betas": False,
-        "timestep_spacing": False,
+        "trained_betas": None,
+        "timestep_spacing": "leading",
     }
     
     scheduler_settings.update(kwargs)

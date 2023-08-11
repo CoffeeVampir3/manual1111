@@ -35,3 +35,11 @@ def get_available_scheduler_names():
 
 def get_scheduler_by_name(name):
     return get_available_schedulers()[name]
+
+def get_name_by_scheduler(scheduler):
+    schedulers = get_available_schedulers()
+    
+    for name, scheduler_cls in schedulers.items():
+        if scheduler_cls == scheduler:
+            return str(name)
+    return None
