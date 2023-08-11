@@ -7,7 +7,7 @@ from datetime import datetime
 from mechanisms.tokenizers_utils import encode_from_pipe
 from dataclasses import dataclass
 from shared.config_utils import save_json_configs
-from mechanisms.killswitch import killswitch_callback, KillswitchEngaged
+from mechanisms.killswitch import killswitch_callback, KillswitchEngaged, killswitch_reset
 
 T2I_TAB_NAME = "text_to_image_v1"
 
@@ -42,6 +42,7 @@ def run_t2i(model_path,
 
     all_images = []
     all_prompts = []
+    killswitch_reset()
     try:
         for n in range(int(number_of_batches)):
             images = pipe(

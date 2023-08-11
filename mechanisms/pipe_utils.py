@@ -71,8 +71,8 @@ def load_new_pipe(model_path, scheduler, device):
         LOADED_PIPE = load_compiler(LOADED_PIPE, model_path, scheduler, device)
 
         LOADED_PIPE.to(device)
-        #if device != "cpu":
-        #    LOADED_PIPE.enable_sequential_cpu_offload()
+        if device != "cpu" and get_config("use_cpu_offloading"):
+            LOADED_PIPE.enable_sequential_cpu_offload()
         return LOADED_PIPE
  
     except Exception as e:

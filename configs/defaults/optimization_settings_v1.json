@@ -1,1 +1,1 @@
-{"compilation_method": "None", "optimize_for": "Speed"}
+{"compilation_method": "None", "optimize_for": "Speed", "use_cpu_offloading": false}
