@@ -1,7 +1,7 @@
 import gradio as gr
 import os
 from shared.running_config import set_config
-from shared.config_utils import get_config_save_load, get_component_dictionary
+from shared.config_utils import make_config_functions, get_component_dictionary
 
 EXIF_TAB_NAME = "exif_settings_v1" 
 
@@ -25,11 +25,15 @@ def make_exif_settings():
                                           type="value")
 
     comp_dict = get_component_dictionary(locals())
-    save, load = get_config_save_load(EXIF_TAB_NAME, comp_dict, update_config)
+    save, load, default = make_config_functions(EXIF_TAB_NAME, comp_dict, update_config)
     
     interface.load(load, inputs=write_tags, outputs=write_tags)
     
-    save_button = gr.Button(value="Save Config")
-    save_button.click(fn=save, inputs=write_tags, outputs=None)
+    with gr.Row():
+        save_button = gr.Button(value="Save Config")
+        save_button.click(fn=save, inputs=write_tags, outputs=None)
+        
+        default_button = gr.Button(value="Return to default settings (Not saved until you hit save configs.)")
+        default_button.click(fn=default, inputs=write_tags, outputs=write_tags)
     
     return interface

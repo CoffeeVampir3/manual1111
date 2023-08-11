@@ -1,7 +1,7 @@
 import gradio as gr
 import os
 from shared.running_config import set_config
-from shared.config_utils import get_config_save_load, get_component_dictionary
+from shared.config_utils import make_config_functions, get_component_dictionary
 
 OPTIMIZATION_TAB_NAME = "optimization_settings_v1"
 
@@ -31,11 +31,15 @@ def make_optimization_settings():
             ui_items = [compilation_method, optimize_for]
     
     comp_dict = get_component_dictionary(locals())
-    save, load = get_config_save_load(OPTIMIZATION_TAB_NAME, comp_dict, update_config)
+    save, load, default = make_config_functions(OPTIMIZATION_TAB_NAME, comp_dict, update_config)
     
     interface.load(load, inputs=ui_items, outputs=ui_items)
     
-    save_button = gr.Button(value="Save Config")
-    save_button.click(fn=save, inputs=ui_items, outputs=None)
+    with gr.Row():
+        save_button = gr.Button(value="Save Config")
+        save_button.click(fn=save, inputs=ui_items, outputs=None)
+        
+        default_button = gr.Button(value="Return to default settings (Not saved until you hit save configs.)")
+        default_button.click(fn=default, inputs=ui_items, outputs=ui_items)
     
     return interface

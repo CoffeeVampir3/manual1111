@@ -11,14 +11,7 @@ def save_json_configs(tab_name, **kwargs):
     with open(f'configs/{tab_name}.json', 'w') as f:
         json.dump(kwargs, f)
         
-def load_json_configs(tab_name, **kwargs):
-    dir_path = Path("./configs")
-    file_name = f"{tab_name}.json"
-    dest = (dir_path/file_name)
-    
-    if not dest.exists():
-        return [gr.skip()] * len(kwargs)
-
+def load_json_impl(dest, **kwargs):
     with open(dest, 'r') as f:
         loaded_args = json.load(f)
     
@@ -32,6 +25,26 @@ def load_json_configs(tab_name, **kwargs):
     if len(results) == 1:
         return results[0] #Not sure why this is needed, but it is.
     return results
+        
+def load_json_configs(tab_name, **kwargs):
+    dir_path = Path("./configs")
+    file_name = f"{tab_name}.json"
+    dest = (dir_path/file_name)
+    
+    if not dest.exists():
+        return load_default_json_configs(tab_name, **kwargs)
+
+    return load_json_impl(dest, **kwargs)
+
+def load_default_json_configs(tab_name, **kwargs):
+    dir_path = Path("./configs/defaults")
+    file_name = f"{tab_name}.json"
+    dest = (dir_path/file_name)
+    
+    if not dest.exists():
+        return [gr.skip()] * len(kwargs)
+    
+    return load_json_impl(dest, **kwargs)
 
 def get_dict_slice(comp_dict, key):
     return {key: comp_dict[key]} if key in comp_dict else None
@@ -45,7 +58,7 @@ def get_component_dictionary(comp_dict):
                 final_items.update(val)
     return final_items
 
-def save_or_load_gradio_values(load, tab_name, local_components_dict, update_config_func, *resolved_component_list):
+def save_or_load_gradio_values(op, tab_name, local_components_dict, update_config_func, *resolved_component_list):
     ui_state = {}
     for key, value in zip(local_components_dict, resolved_component_list):
         ui_state[key] = value
@@ -53,12 +66,15 @@ def save_or_load_gradio_values(load, tab_name, local_components_dict, update_con
     if update_config_func:
         update_config_func(**ui_state)
         
-    if load:
+    if op == "load":
         return load_json_configs(tab_name, **ui_state)
+    elif op == "default":
+        return load_default_json_configs(tab_name, **ui_state)
 
     save_json_configs(tab_name, **ui_state)
     
-def get_config_save_load(tab_name, local_components_dict, update_config_func):
-    load = partial(save_or_load_gradio_values, True, tab_name, local_components_dict, update_config_func)
-    save = partial(save_or_load_gradio_values, False, tab_name, local_components_dict, update_config_func)
-    return save, load
+def make_config_functions(tab_name, local_components_dict, update_config_func):
+    load = partial(save_or_load_gradio_values, "load", tab_name, local_components_dict, update_config_func)
+    save = partial(save_or_load_gradio_values, "save", tab_name, local_components_dict, update_config_func)
+    default = partial(save_or_load_gradio_values, "default", tab_name, local_components_dict, update_config_func)
+    return save, load, default

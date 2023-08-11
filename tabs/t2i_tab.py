@@ -4,7 +4,7 @@ from tabs.tab_utils import get_available_from_dir, get_available_from_leafs
 from mechanisms.t2i import run_t2i, T2I_TAB_NAME
 from shared.scheduler_utils import get_available_scheduler_names
 from mechanisms.killswitch import killswitch_engage
-from shared.config_utils import get_config_save_load, get_component_dictionary
+from shared.config_utils import make_config_functions, get_component_dictionary
 from functools import partial
 
 def make_text_to_image_tab():
@@ -53,7 +53,7 @@ def make_text_to_image_tab():
                     allow_preview=True)
 
     comp_dict = get_component_dictionary(locals())
-    _, load = get_config_save_load(T2I_TAB_NAME, comp_dict, None)
+    _, load, _ = make_config_functions(T2I_TAB_NAME, comp_dict, None)
     
     inputs = [model_path, *conditioning, *generating]
     interface.load(load, inputs=inputs, outputs=inputs)

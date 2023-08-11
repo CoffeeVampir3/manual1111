@@ -2,7 +2,7 @@ import gradio as gr
 import os
 from shared.running_config import set_config
 from functools import partial
-from shared.config_utils import get_config_save_load, get_component_dictionary
+from shared.config_utils import make_config_functions, get_component_dictionary
 from shared.scheduler_utils import get_available_scheduler_names
 
 def update_config(scheduler_name, **kwargs):
@@ -50,12 +50,16 @@ def make_singular_scheduler_tab(scheduler_name, base_scheduler_settings):
     
     scheduler_configurator = partial(update_config, scheduler_name)
     comp_dict = get_component_dictionary(locals())
-    save, load = get_config_save_load(scheduler_name, comp_dict, scheduler_configurator)
+    save, load, default = make_config_functions(scheduler_name, comp_dict, scheduler_configurator)
     
     interface.load(load, inputs=ui_items, outputs=ui_items)
     
-    save_button = gr.Button(value="Save Config")
-    save_button.click(fn=save, inputs=ui_items, outputs=None)
+    with gr.Row():
+        save_button = gr.Button(value="Save Config")
+        save_button.click(fn=save, inputs=ui_items, outputs=None)
+        
+        default_button = gr.Button(value="Return to default settings (Not saved until you hit save configs.)")
+        default_button.click(fn=default, inputs=ui_items, outputs=ui_items)
     
     return interface
 
