@@ -86,16 +86,15 @@ def load_new_pipe(model_path, scheduler, device):
     
 def load_scheduler(pipe, scheduler):
     if (pipe.scheduler and
-    pipe.scheduler.__class__.__name__ == scheduler.__class__.__name__):
+        pipe.scheduler.__class__.__name__ == scheduler.__class__.__name__):
         return pipe
+    
     scheduler_dict = {
-        "_diffusers_version": "0.19.0.dev0",
         "beta_end": 0.012,
         "beta_schedule": "scaled_linear",
         "beta_start": 0.00085,
         "clip_sample": False,
         "interpolation_type": "linear",
-        "num_train_timesteps": 1000,
         "prediction_type": "epsilon",
         "sample_max_value": 1.0,
         "set_alpha_to_one": False,
@@ -110,25 +109,22 @@ def load_scheduler(pipe, scheduler):
     return pipe
  
 def load_vae(pipe, model_path, scheduler, device):
-    use_fast_vae = get_config("use_fast_decoder")
-    if use_fast_vae and pipe.vae and pipe.vae.__class__.__name__ != "AutoencoderTiny":
+    if get_config("use_fast_decoder") and pipe.vae and pipe.vae.__class__.__name__ != "AutoencoderTiny":
         from diffusers import AutoencoderTiny
-        new_vae = None
         try:
-            new_vae = AutoencoderTiny.from_pretrained("vaes/taesdxl", torch_dtype=torch.bfloat16)
-        except:
-            pass
-        
-        if new_vae:
-            pipe.vae = new_vae
+            pipe.vae = AutoencoderTiny.from_pretrained("vaes/taesdxl", torch_dtype=torch.bfloat16)
             return pipe
+        except:
+            logging.critical("Wasn't able to load TAESDXL fast decoder. Run the install.py script to download it! Falling back to normal VAE...")
         
-        logging.critical("Wasn't able to load TAESDXL fast decoder. Run the install.py script to download it! Falling back to normal VAE")
     if not pipe.vae:
         pipe = load_new_pipe(model_path, scheduler, device)
-    elif pipe.vae.__class__.__name__ != "AutoencoderTiny":
+    
+    if pipe.vae.__class__.__name__ != "AutoencoderTiny":
         pipe.enable_vae_tiling()
+
     return pipe
+
     
 def load_diffusers_pipe(model_path, scheduler, device):
     global LOADED_PIPE

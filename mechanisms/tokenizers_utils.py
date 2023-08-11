@@ -31,8 +31,8 @@ def weigh_embeddings(tokenizer, prompt, text_embeddings, device, debug=False):
 
     #Re-mean the weights to restore the original mean.
     weighted_embeddings = text_embeddings * weights
-    normalization_factor = text_embeddings.mean() / weighted_embeddings.mean()   
-    weighted_embeddings *= normalization_factor
+    #weighted embedding can never be all 0 because the control tokens at worst will always be 1.
+    weighted_embeddings *= text_embeddings.mean() / weighted_embeddings.mean()
 
     ### Debugging mode to see prompt weightings.
     if debug:
