@@ -1,32 +1,42 @@
 from diffusers import (
     DDIMScheduler,
+    DDIMInverseScheduler,
     DDIMParallelScheduler,
     DDPMScheduler,
     DDPMParallelScheduler,
+    DEISMultistepScheduler,
+    DPMSolverMultistepScheduler,
+    DPMSolverMultistepInverseScheduler,
+    DPMSolverSinglestepScheduler,
     EulerAncestralDiscreteScheduler,
     EulerDiscreteScheduler,
     HeunDiscreteScheduler,
+    IPNDMScheduler,
     KDPM2AncestralDiscreteScheduler,
     KDPM2DiscreteScheduler,
     PNDMScheduler,
-    DPMSolverSinglestepScheduler,
     UniPCMultistepScheduler,
 )
 
 def get_available_schedulers():
     schedulers = {
-        "HeunDiscrete": HeunDiscreteScheduler, #1/2
-        "KDPM2Discrete": KDPM2DiscreteScheduler, #1/2
-        "KDPM2-A-Discrete": KDPM2AncestralDiscreteScheduler, #3
-        "EulerDiscrete": EulerDiscreteScheduler, #4
-        "UniPCMulti": UniPCMultistepScheduler, #5
-        "DDPMParallel": DDPMParallelScheduler, #6
-        "Euler-A-Discrete": EulerAncestralDiscreteScheduler, #7
-        "DDPM": DDPMScheduler, #Ranked 8
-        "DDIMParallel": DDIMParallelScheduler, #Ranked 9
-        "PNDM": PNDMScheduler, #Ranked 10
-        "DPMSolverSingle": DPMSolverSinglestepScheduler, #Ranked 11
-        "DDIM": DDIMScheduler, #Ranked 12
+        "DDIM": DDIMScheduler,
+        "DDIMInverse": DDIMInverseScheduler,
+        "DDIMParallel": DDIMParallelScheduler,
+        "DDPM": DDPMScheduler,
+        "DDPMParallel": DDPMParallelScheduler,
+        "DEISMultistep": DEISMultistepScheduler,
+        "DPMSolverMultistep": DPMSolverMultistepScheduler,
+        "DPMSolverMultistepInverse": DPMSolverMultistepInverseScheduler,
+        "DPMSolverSinglestep": DPMSolverSinglestepScheduler,
+        "EulerAncestralDiscrete": EulerAncestralDiscreteScheduler,
+        "EulerDiscrete": EulerDiscreteScheduler,
+        "HeunDiscrete": HeunDiscreteScheduler,
+        "IPNDM": IPNDMScheduler,
+        "KDPM2AncestralDiscrete": KDPM2AncestralDiscreteScheduler,
+        "KDPM2Discrete": KDPM2DiscreteScheduler,
+        "PNDM": PNDMScheduler,
+        "UniPCMultistep": UniPCMultistepScheduler,
     }
     return schedulers
     

@@ -3,6 +3,7 @@ import os
 from shared.running_config import set_config
 from functools import partial
 from shared.config_utils import get_config_save_load, get_component_dictionary
+from shared.scheduler_utils import get_available_scheduler_names
 
 def update_config(scheduler_name, **kwargs):
     scheduler_settings = {
@@ -14,8 +15,8 @@ def update_config(scheduler_name, **kwargs):
     set_config(scheduler_name, scheduler_settings)
     print(f"Updated {scheduler_name} configs!")
 
-def make_singular_scheduler_tab(scheduler_name, base_scheduler_settings, interface):
-    with gr.Tab(label=scheduler_name) as scheduler_tab:
+def make_singular_scheduler_tab(scheduler_name, base_scheduler_settings):
+    with gr.Blocks() as interface:
         with gr.Row():
             use_karras_sigmas = gr.Checkbox(label="Use Karras Sigmas", value=base_scheduler_settings["use_karras_sigmas"])
             clip_sample = gr.Checkbox(label="Clip Sample", value=base_scheduler_settings["clip_sample"])
@@ -56,7 +57,7 @@ def make_singular_scheduler_tab(scheduler_name, base_scheduler_settings, interfa
     save_button = gr.Button(value="Save Config")
     save_button.click(fn=save, inputs=ui_items, outputs=None)
     
-    return scheduler_tab
+    return interface
 
 default_scheduler_values = {
     "beta_end": 0.012,
@@ -76,6 +77,9 @@ default_scheduler_values = {
 
 def make_scheduler_settings():
     with gr.Blocks() as interface:
-        make_singular_scheduler_tab("EulerDiscrete", default_scheduler_values, interface)
-    
+        names = get_available_scheduler_names()
+        for name in names:
+            with gr.Tab(label=name):
+                make_singular_scheduler_tab(name, default_scheduler_values)
+
     return interface
