@@ -11,5 +11,5 @@ vaes/*
 __pycache__/
 
 outputs/*
-
-configs/*
+configs/*.json
+!configs/defaults/*
