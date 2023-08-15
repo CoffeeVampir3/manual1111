@@ -14,11 +14,13 @@ with open('token.txt', 'r') as file:
 bot = Client(intents=Intents.DEFAULT, token=TOKEN)
 
 MODEL_PATH = os.path.abspath(sys.argv[1])
+global last_generation_time
 last_generation_time = datetime.timestamp(datetime.now())
 
 work_queue = asyncio.Queue()
 async def worker():
     while True:
+        global last_generation_time
         ctx, prompt, cfg, steps, width, height, scheduler = await work_queue.get()
 
         #safeguard against staling out mid run
