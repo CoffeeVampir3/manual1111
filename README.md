@@ -5,7 +5,7 @@
 
 Make images with SDXL and stuff. Comes with two front end options:
 - Gradio
-- Discord Bot (See (https://github.com/CoffeeVampir3/manual1111/wiki/Pybot))
+- Discord Bot See (https://github.com/CoffeeVampir3/manual1111/wiki/Pybot)
 
 Have fun.
 
