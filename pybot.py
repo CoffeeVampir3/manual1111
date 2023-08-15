@@ -52,7 +52,7 @@ async def worker():
 async def unload_if_unused_recently():
     global last_generation_time
     current_time = datetime.timestamp(datetime.now())
-    print(f"Stale watchdog - Last generation was {current_time - last_generation_time } seconds ago.")
+    print(f"Stale watchdog - Last generation was {current_time - last_generation_time:.2f} seconds ago.")
     if current_time - last_generation_time >= 120:
         unload_current_pipe()
         print("Unloaded stale pipe!")
