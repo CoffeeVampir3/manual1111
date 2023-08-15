@@ -21,6 +21,8 @@ async def worker():
     while True:
         ctx, prompt, cfg, steps, width, height, scheduler = await work_queue.get()
 
+        #safeguard against staling out mid run
+        last_generation_time = datetime.timestamp(datetime.now())
         def run_t2i_generator():
             return list(run_t2i(
                 MODEL_PATH,
