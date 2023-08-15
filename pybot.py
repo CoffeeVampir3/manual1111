@@ -11,7 +11,7 @@ with open('token.txt', 'r') as file:
 bot = Client(intents=Intents.DEFAULT, token=TOKEN)
 
 
-MODEL_PATH = "/home/blackroot/Desktop/diffusion_ui/models/sd_xl_base_1.0_0.9vae.safetensors"
+MODEL_PATH = "put model path here"
 
 work_queue = asyncio.Queue()
 async def worker():
