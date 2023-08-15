@@ -3,6 +3,12 @@
 # manual1111
 ![preview](https://github.com/CoffeeVampir3/manual1111/blob/af940d212bb126bfc38ce0fc02ff6a7d45478c83/image.png)
 
+Make images with SDXL and stuff. Comes with two front end options:
+- Gradio
+- Discord Bot
+
+Have fun.
+
 # Install
 `pip install -r requirements.txt`
 
