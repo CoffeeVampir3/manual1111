@@ -1,8 +1,10 @@
-from interactions import slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice, Task, listen
+from interactions import slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice, Task, listen, IntervalTrigger
 from interactions import Client, Intents, listen
 from concurrent.futures import ThreadPoolExecutor
 from mechanisms.t2i import run_t2i
+from mechanisms.pipe_utils import unload_current_pipe
 from shared.scheduler_utils import get_available_scheduler_names
+from datetime import datetime
 from PIL import Image
 import asyncio, io, tempfile
 import sys, os
@@ -12,7 +14,7 @@ with open('token.txt', 'r') as file:
 bot = Client(intents=Intents.DEFAULT, token=TOKEN)
 
 MODEL_PATH = os.path.abspath(sys.argv[1])
-print(MODEL_PATH)
+last_generation_time = datetime.timestamp(datetime.now())
 
 work_queue = asyncio.Queue()
 async def worker():
@@ -38,8 +40,20 @@ async def worker():
             with tempfile.NamedTemporaryFile(suffix=".png", delete=True) as temp_file:
                 image_data.save(temp_file.name, format='PNG') # Save the Image object to the temporary file
                 await ctx.send(file=temp_file.name, filename="image.png")
+                last_generation_time = datetime.timestamp(datetime.now())
 
         work_queue.task_done()
+        
+@Task.create(IntervalTrigger(minutes=1))
+async def unload_if_unused_recently():
+    global last_generation_time
+    current_time = datetime.timestamp(datetime.now())
+    print(f"Current: {current_time}")
+    print(f"Last: {last_generation_time}")
+    print(f"Stale watchdog - Last generation was {current_time - last_generation_time } seconds ago.")
+    if current_time - last_generation_time >= 120:
+        unload_current_pipe()
+        print("Unloaded stale pipe!")
 
 scheduler_choices = [SlashCommandChoice(name=key, value=key) for key in get_available_scheduler_names()]
 @slash_command(name="t2i", description="John Rambonius")
@@ -92,6 +106,7 @@ async def my_command_function(ctx: SlashContext, prompt, cfg=8.0, steps=20, widt
 
 @listen()
 async def on_startup():
+    unload_if_unused_recently.start()
     asyncio.create_task(worker())
     
 bot.start()
