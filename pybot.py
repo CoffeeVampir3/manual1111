@@ -5,13 +5,14 @@ from mechanisms.t2i import run_t2i
 from shared.scheduler_utils import get_available_scheduler_names
 from PIL import Image
 import asyncio, io, tempfile
+import sys, os
 
 with open('token.txt', 'r') as file:
     TOKEN = file.read().strip()
 bot = Client(intents=Intents.DEFAULT, token=TOKEN)
 
-
-MODEL_PATH = "put model path here"
+MODEL_PATH = os.path.abspath(sys.argv[1])
+print(MODEL_PATH)
 
 work_queue = asyncio.Queue()
 async def worker():
@@ -21,7 +22,7 @@ async def worker():
         def run_t2i_generator():
             return list(run_t2i(
                 MODEL_PATH,
-                prompt, prompt, "", "",
+                prompt, "",
                 -1, cfg, steps, width, height,
                 1, 1, scheduler
             ))
