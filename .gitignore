@@ -13,3 +13,5 @@ __pycache__/
 outputs/*
 configs/*.json
 !configs/defaults/*
+discord_bot/*
+token.txt

@@ -9,15 +9,10 @@ from dataclasses import dataclass
 from shared.config_utils import save_json_configs
 from mechanisms.killswitch import killswitch_callback, KillswitchEngaged, killswitch_reset
 
-T2I_TAB_NAME = "text_to_image_v1"
-
 def run_t2i(model_path, 
-        positive_prompt, keyword_prompt, negative_prompt, negative_keyword_prompt,
+        positive_prompt, negative_prompt,
         seed, classifier_free_guidance, generation_steps, image_width, image_height,
         batch_size, number_of_batches, scheduler_name):
-    
-    t2i_data = locals()
-    save_json_configs(T2I_TAB_NAME, **t2i_data)
     
     scheduler = get_scheduler_by_name(scheduler_name)
     resolved_model_path = get_path_from_leaf("models", model_path)
@@ -31,7 +26,7 @@ def run_t2i(model_path,
     else: nseed = seed
     generator.manual_seed(nseed)
     
-    pos, neg, pos_pool, neg_pool = encode_from_pipe(pipe, positive_prompt, negative_prompt, keyword_prompt, negative_keyword_prompt, batch_size)
+    pos, neg, pos_pool, neg_pool = encode_from_pipe(pipe, positive_prompt, negative_prompt, positive_prompt, negative_prompt, batch_size)
     
     generation_configs = {
         "num_inference_steps":generation_steps,

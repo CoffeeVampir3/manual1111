@@ -1,1 +1,1 @@
-{"model_path": "sd_xl_base_1.0_0.9vae.safetensors", "positive_prompt": "The worlds cutest kitten, overwatch stylized, league of legends, very cute, saturated colors", "keyword_prompt": "The worlds cutest kitten, overwatch stylized, league of legends, very cute, saturated colors", "negative_prompt": "", "negative_keyword_prompt": "", "seed": 12345, "classifier_free_guidance": 7.5, "generation_steps": 15, "image_width": 2048, "image_height": 1024, "batch_size": 1, "number_of_batches": 1, "scheduler_name": "KDPM2Discrete"}
+{"model_path": "sd_xl_base_1.0_0.9vae.safetensors"}

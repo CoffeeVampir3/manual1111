@@ -1,11 +1,12 @@
 import gradio as gr
 import os
 from tabs.tab_utils import get_available_from_dir, get_available_from_leafs
-from mechanisms.t2i import run_t2i, T2I_TAB_NAME
-from shared.scheduler_utils import get_available_scheduler_names
-from mechanisms.killswitch import killswitch_engage
+from mechanisms.t2i import run_t2i
 from shared.config_utils import make_config_functions, get_component_dictionary
 from functools import partial
+from tabs.generator_components import make_prompt_column, make_generation_accordion
+
+T2I_TAB_NAME = "text_to_image_v1"
 
 def make_text_to_image_tab():
     with gr.Blocks() as interface:
@@ -15,36 +16,9 @@ def make_text_to_image_tab():
             with gr.Column(scale=2):
                 with gr.Row():
                     model_path = gr.Dropdown(choices = get_available_models(), label="Base model")
-                with gr.Column():
-                    with gr.Group():
-                        with gr.Row():
-                            positive_prompt = gr.TextArea(value="", lines=3, label="Positive Prompt", container=True)
-                            keyword_prompt = gr.TextArea(value="", lines=3, label="Positive Keywords", container=True, visible=False) #Unused for now.
-                        with gr.Row():
-                            negative_prompt = gr.TextArea(value="", lines=3, label="Negative Prompt", container=True)
-                            negative_keyword_prompt = gr.TextArea(value="", lines=3, label="Negative Keywords", container=True, visible=False) #Unused for now.
-                        #conditioning = [positive_prompt, keyword_prompt, negative_prompt, negative_keyword_prompt]
-                        conditioning = [positive_prompt, positive_prompt, negative_prompt, negative_prompt]
+                conditioning, save_prompt, load_prompt = make_prompt_column(T2I_TAB_NAME)
                 
-                with gr.Accordion(label="Config", open=True):
-                    with gr.Group():
-                        with gr.Row():
-                            seed = gr.Number(value=int(-1), label="Seed", precision=0)
-                            classifier_free_guidance = gr.Slider(minimum=0.5, maximum=200.0, value=16.0, label="CFG")
-                            generation_steps = gr.Slider(minimum=1, maximum=100, step=int(1), value=int(24), label="Steps")
-                        with gr.Row():
-                            image_width = gr.Slider(minimum=64, maximum=2048, step=int(8), value=int(1024), label="Width")
-                            image_height = gr.Slider(minimum=64, maximum=2048, step=int(8), value=int(1024), label="Height")
-                        with gr.Row():
-                            batch_size = gr.Slider(minimum=1, maximum=20, value=int(1), step=int(1), label="# Per Run")
-                            number_of_batches = gr.Slider(minimum=1, maximum=20, value=int(1), step=int(1), label="Run This Many Times")
-                        scheduler_name = gr.Dropdown(choices = get_available_scheduler_names(), label="Scheduler", value = "HeunDiscrete")
-                        generating = [seed, classifier_free_guidance, generation_steps, image_width, image_height, batch_size, number_of_batches, scheduler_name]
-                with gr.Column():
-                    with gr.Row():
-                        kill = gr.Button("Stop")
-                        kill.click(fn=killswitch_engage, queue=False)
-                        submit = gr.Button("Generate")
+                generating, submit, save_gen, load_gen = make_generation_accordion(T2I_TAB_NAME)
 
             with gr.Column(scale=3):
                 output_gallery = gr.Gallery(
@@ -53,11 +27,16 @@ def make_text_to_image_tab():
                     allow_preview=True)
 
     comp_dict = get_component_dictionary(locals())
-    _, load, _ = make_config_functions(T2I_TAB_NAME, comp_dict, None)
+    save_t2i, load_t2i, _ = make_config_functions(T2I_TAB_NAME, comp_dict, None)
     
     inputs = [model_path, *conditioning, *generating]
-    interface.load(load, inputs=inputs, outputs=inputs)
+    interface.load(load_t2i, inputs=[model_path], outputs=[model_path])
+    interface.load(load_prompt, inputs=conditioning, outputs=conditioning)
+    interface.load(load_gen, inputs=generating, outputs=generating)
     
+    submit.click(fn=save_t2i, inputs=[model_path], outputs=None)
+    submit.click(fn=save_prompt, inputs=conditioning, outputs=None)
+    submit.click(fn=save_gen, inputs=generating, outputs=None)
     submit.click(fn=run_t2i, inputs=inputs, outputs=output_gallery)
     
     return interface
