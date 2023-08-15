@@ -55,7 +55,7 @@ async def unload_if_unused_recently():
     print(f"Stale watchdog - Last generation was {current_time - last_generation_time:.2f} seconds ago.")
     if current_time - last_generation_time >= 120:
         unload_current_pipe()
-        print("Unloaded stale pipe!")
+        print("Unloaded any stale pipes!")
 
 scheduler_choices = [SlashCommandChoice(name=key, value=key) for key in get_available_scheduler_names()]
 @slash_command(name="t2i", description="John Rambonius")
