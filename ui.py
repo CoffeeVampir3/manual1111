@@ -1,6 +1,7 @@
 import gradio as gr
 import argparse
 from tabs.t2i_tab import make_text_to_image_tab
+from tabs.i2i_tab import make_image_to_image_tab
 from tabs.config_tab import make_config_tab, load_all_configs
 from functools import partial
 
@@ -11,6 +12,8 @@ custom_css = (""".gradio-container {
 with gr.Blocks(css=custom_css) as interface:
     with gr.Tab("Text -> Image"):
         make_text_to_image_tab()
+    with gr.Tab("Image -> Image"):
+        make_image_to_image_tab()
     with gr.Tab("Config"):
         make_config_tab()
         

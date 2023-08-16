@@ -29,9 +29,6 @@ def make_generation_accordion(tab_name):
                 classifier_free_guidance = gr.Slider(minimum=0.5, maximum=200.0, value=16.0, label="CFG")
                 generation_steps = gr.Slider(minimum=1, maximum=100, step=int(1), value=int(24), label="Steps")
             with gr.Row():
-                image_width = gr.Slider(minimum=64, maximum=2048, step=int(8), value=int(1024), label="Width")
-                image_height = gr.Slider(minimum=64, maximum=2048, step=int(8), value=int(1024), label="Height")
-            with gr.Row():
                 batch_size = gr.Slider(minimum=1, maximum=20, value=int(1), step=int(1), label="# Per Run")
                 number_of_batches = gr.Slider(minimum=1, maximum=20, value=int(1), step=int(1), label="Run This Many Times")
             scheduler_name = gr.Dropdown(choices = get_available_scheduler_names(), label="Scheduler", value = "HeunDiscrete")
@@ -44,4 +41,4 @@ def make_generation_accordion(tab_name):
     comp_dict = get_component_dictionary(locals())
     save, load, _ = make_config_functions(config_name, comp_dict, None)
     
-    return [seed, classifier_free_guidance, generation_steps, image_width, image_height, batch_size, number_of_batches, scheduler_name], submit, save, load
+    return [seed, classifier_free_guidance, generation_steps, batch_size, number_of_batches, scheduler_name], submit, save, load

@@ -43,15 +43,13 @@ def unload_current_pipe():
     torch.cuda.empty_cache()
     torch.cuda.synchronize()
     
-def load_new_pipe(model_path, scheduler, device):
+def load_new_pipe(model_path, scheduler, device, load_pipe_func):
     global LOADED_PIPE
     global LOADED_MODEL_PATH
     unload_current_pipe()
     
     from shared.running_config import debug_config
-    try:
-        load_pipe_func = StableDiffusionXLPipeline.from_single_file
-        
+    try:     
         scheduler_name = get_name_by_scheduler(scheduler)
         scheduler_config = get_config(scheduler_name)
         if scheduler_config: load_pipe_func = partial(load_pipe_func, scheduler_config=scheduler_config)
@@ -161,23 +159,29 @@ def load_vae(pipe, model_path, scheduler, device):
 
     return pipe
 
-    
-def load_diffusers_pipe(model_path, scheduler, device):
+
+global LOADED_TYPE
+LOADED_TYPE = None
+def load_diffusers_pipe(model_path, scheduler, device, pipe_type, load_pipe_func):
     global LOADED_PIPE
+    global LOADED_TYPE
     global LOADED_MODEL_PATH
     torch.set_float32_matmul_precision('high')
     
     #Check if there's already a loaded pipe that matches what kind of pipe we want.
     if (LOADED_MODEL_PATH and
         LOADED_MODEL_PATH == model_path and
-        LOADED_PIPE):
+        LOADED_PIPE and 
+        LOADED_TYPE and
+        LOADED_TYPE == pipe_type.__name__):
         
         LOADED_PIPE = load_scheduler(LOADED_PIPE, scheduler)
         LOADED_PIPE = load_vae(LOADED_PIPE, model_path, scheduler, device)
         LOADED_PIPE = load_compiler(LOADED_PIPE, model_path, scheduler, device)
         return LOADED_PIPE
     
-    return load_new_pipe(model_path, scheduler, device)
+    LOADED_TYPE = pipe_type.__name__
+    return load_new_pipe(model_path, scheduler, device, load_pipe_func)
 
 global GENERATOR
 GENERATOR = None

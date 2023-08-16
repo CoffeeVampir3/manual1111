@@ -1,1 +1,1 @@
-{"model_path": "sd_xl_base_1.0_0.9vae.safetensors"}
+{"model_path": "sd_xl_base_1.0_0.9vae.safetensors", "image_width": 1024, "image_height": 1024}

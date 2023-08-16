@@ -1,0 +1,1 @@
+{"seed": -1, "classifier_free_guidance": 16, "generation_steps": 24, "batch_size": 1, "number_of_batches": 1, "scheduler_name": "EulerDiscrete"}

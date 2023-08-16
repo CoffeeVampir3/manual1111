@@ -1,1 +1,1 @@
-{"seed": -1, "classifier_free_guidance": 16, "generation_steps": 15, "image_width": 1024, "image_height": 1024, "batch_size": 1, "number_of_batches": 1, "scheduler_name": "HeunDiscrete"}
+{"seed": -1, "classifier_free_guidance": 13.5, "generation_steps": 15, "batch_size": 1, "number_of_batches": 1, "scheduler_name": "EulerDiscrete"}
