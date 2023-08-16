@@ -19,7 +19,7 @@ def make_image_to_image_tab():
                 conditioning, save_prompt, load_prompt = make_prompt_column(I2I_TAB_NAME)
                 with gr.Accordion(label="Image"):
                     initialization_image = gr.Image(container=False, type="pil")
-                    strength = gr.Slider(value=0.5, minimum=0.0, maximum=1.0, step=0.01)
+                    strength = gr.Slider(value=0.5, minimum=0.0, maximum=1.0, step=0.01, label="Strength")
                 generating, submit, save_gen, load_gen = make_generation_accordion(I2I_TAB_NAME)
 
             with gr.Column(scale=3):
