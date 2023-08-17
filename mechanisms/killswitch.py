@@ -1,7 +1,6 @@
 class KillswitchEngaged(Exception):
     pass
 
-global KILLSWITCH
 KILLSWITCH = False
 
 def killswitch_callback(step, t, latents):

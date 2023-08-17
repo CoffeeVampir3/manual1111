@@ -29,7 +29,7 @@ def make_image_to_image_tab():
                     allow_preview=True)
 
     comp_dict = get_component_dictionary(locals())
-    del comp_dict["initialization_image"]
+    del comp_dict["initialization_image"] #There's a pretty good chance the prior image used to initialize won't exist, so just skip it.
     save_i2i, load_i2i, _ = make_config_functions(I2I_TAB_NAME, comp_dict, None)
     
     ui_items = [model_path, strength]

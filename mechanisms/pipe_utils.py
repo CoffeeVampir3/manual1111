@@ -7,6 +7,7 @@ from shared.running_config import get_config
 from shared.log import vampire_log
 from shared.scheduler_utils import get_name_by_scheduler
 from functools import partial
+from dataclasses import dataclass
 
 class NoWatermarker:
     def __init__(self):
@@ -15,26 +16,28 @@ class NoWatermarker:
     def apply_watermark(self, images: torch.FloatTensor):
         return images #Fake watermarker that bypasses watermarking.
 
-global LOADED_PIPE
-global LOADED_MODEL_PATH
-global CURRENT_COMPILATION_METHOD
-LOADED_PIPE = None
-LOADED_MODEL_PATH = None
-CURRENT_COMPILATION_METHOD = None
+@dataclass
+class CurrentPipeConfig:
+    pipe: None
+    path: None
+    compiler: None
+    pipe_type: None
+    
+def reset_pipe_config():
+    global CURRENT_PIPE_CONFIG 
+    CURRENT_PIPE_CONFIG = CurrentPipeConfig(None, None, None, None)
+
+reset_pipe_config()
 
 def unload_current_pipe():
-    global LOADED_PIPE
-    global LOADED_MODEL_PATH
-    global CURRENT_COMPILATION_METHOD
+    global CURRENT_PIPE_CONFIG
     
-    if LOADED_PIPE:
-        for x in LOADED_PIPE.__module__:
+    if CURRENT_PIPE_CONFIG.pipe:
+        for x in CURRENT_PIPE_CONFIG.pipe.__module__:
             del x
-        del LOADED_PIPE
+        del CURRENT_PIPE_CONFIG.pipe
         
-    LOADED_PIPE = None
-    LOADED_MODEL_PATH = None
-    CURRENT_COMPILATION_METHOD = None
+    reset_pipe_config()
 
     torch.cuda.empty_cache()
     torch.cuda.synchronize()
@@ -44,8 +47,7 @@ def unload_current_pipe():
     torch.cuda.synchronize()
     
 def load_new_pipe(model_path, scheduler, device, load_pipe_func):
-    global LOADED_PIPE
-    global LOADED_MODEL_PATH
+    global CURRENT_PIPE_CONFIG
     unload_current_pipe()
     
     from shared.running_config import debug_config
@@ -54,40 +56,43 @@ def load_new_pipe(model_path, scheduler, device, load_pipe_func):
         scheduler_config = get_config(scheduler_name)
         if scheduler_config: load_pipe_func = partial(load_pipe_func, scheduler_config=scheduler_config)
         
-        LOADED_PIPE = load_pipe_func(
+        pipe = load_pipe_func(
             model_path, 
             torch_dtype=torch.bfloat16, 
             use_safetensors=True, 
             variant="fp16",
             add_watermarker=False)
         
-        LOADED_MODEL_PATH = model_path
-        LOADED_PIPE.watermark = NoWatermarker()
+        CURRENT_PIPE_CONFIG.path = model_path
+        pipe.watermark = NoWatermarker()
         
-        LOADED_PIPE = load_scheduler(LOADED_PIPE, scheduler)
-        LOADED_PIPE = load_vae(LOADED_PIPE, model_path, scheduler, device)
-        LOADED_PIPE = load_compiler(LOADED_PIPE, model_path, scheduler, device)
+        pipe = load_scheduler(pipe, scheduler)
+        pipe = load_vae(pipe, model_path, scheduler, device)
+        pipe = load_compiler(pipe, model_path, scheduler, device)
 
-        LOADED_PIPE.to(device)
+        pipe.to(device)
         if device != "cpu" and get_config("use_cpu_offloading"):
-            LOADED_PIPE.enable_sequential_cpu_offload()
-        return LOADED_PIPE
+            pipe.enable_sequential_cpu_offload()
+            
+        CURRENT_PIPE_CONFIG.pipe = pipe
+        return CURRENT_PIPE_CONFIG.pipe
  
     except Exception as e:
         vampire_log.critical(f"Error loading the model {e}")
         unload_current_pipe()
     
-    return LOADED_PIPE
+    return CURRENT_PIPE_CONFIG.pipe
 
 def load_compiler(pipe, model_path, scheduler, device):
-    global CURRENT_COMPILATION_METHOD
+    global CURRENT_PIPE_CONFIG
     compilation_method = get_config("compilation_method")
     optimization_type = get_config("optimize_for")
+    current_method = CURRENT_PIPE_CONFIG.compiler
     
-    if CURRENT_COMPILATION_METHOD and CURRENT_COMPILATION_METHOD == compilation_method:
+    if current_method and current_method == compilation_method:
         return pipe
     
-    if CURRENT_COMPILATION_METHOD != None:
+    if current_method != None:
         #Safe because unload_current_pipe resets the current compilation method after unloading.
         return load_new_pipe(model_path, scheduler, device)
     
@@ -106,7 +111,7 @@ def load_compiler(pipe, model_path, scheduler, device):
         except:
             pass
     
-    CURRENT_COMPILATION_METHOD = compilation_method
+    CURRENT_PIPE_CONFIG.compiler = compilation_method
     return pipe
     
 def load_scheduler(pipe, scheduler):
@@ -143,6 +148,7 @@ def load_vae(pipe, model_path, scheduler, device):
     if get_config("use_fast_decoder") and pipe.vae and pipe.vae.__class__.__name__ != "AutoencoderTiny":
         from diffusers import AutoencoderTiny
         try:
+            vampire_log.debug("Loaded TAESDXL VAe.")
             pipe.vae = AutoencoderTiny.from_pretrained("vaes/taesdxl", torch_dtype=torch.bfloat16)
             return pipe
         except:
@@ -158,29 +164,24 @@ def load_vae(pipe, model_path, scheduler, device):
         pipe.enable_vae_tiling()
 
     return pipe
-
-
-global LOADED_TYPE
-LOADED_TYPE = None
+        
 def load_diffusers_pipe(model_path, scheduler, device, pipe_type, load_pipe_func):
-    global LOADED_PIPE
-    global LOADED_TYPE
-    global LOADED_MODEL_PATH
     torch.set_float32_matmul_precision('high')
     
-    #Check if there's already a loaded pipe that matches what kind of pipe we want.
-    if (LOADED_MODEL_PATH and
-        LOADED_MODEL_PATH == model_path and
-        LOADED_PIPE and 
-        LOADED_TYPE and
-        LOADED_TYPE == pipe_type.__name__):
-        
-        LOADED_PIPE = load_scheduler(LOADED_PIPE, scheduler)
-        LOADED_PIPE = load_vae(LOADED_PIPE, model_path, scheduler, device)
-        LOADED_PIPE = load_compiler(LOADED_PIPE, model_path, scheduler, device)
-        return LOADED_PIPE
+    global CURRENT_PIPE_CONFIG
     
-    LOADED_TYPE = pipe_type.__name__
+    new_pipe_config = CurrentPipeConfig(CURRENT_PIPE_CONFIG.pipe, model_path, CURRENT_PIPE_CONFIG.compiler, pipe_type.__name__)
+    
+    #Check if there's already a loaded pipe that matches what kind of pipe we want.
+    if (CURRENT_PIPE_CONFIG.pipe and CURRENT_PIPE_CONFIG == new_pipe_config):
+        pipe = CURRENT_PIPE_CONFIG.pipe
+        pipe = load_scheduler(pipe, scheduler)
+        pipe = load_vae(pipe, model_path, scheduler, device)
+        pipe = load_compiler(pipe, model_path, scheduler, device)
+        CURRENT_PIPE_CONFIG.pipe = pipe
+        return CURRENT_PIPE_CONFIG.pipe
+    
+    CURRENT_PIPE_CONFIG.pipe_type = pipe_type.__name__
     return load_new_pipe(model_path, scheduler, device, load_pipe_func)
 
 global GENERATOR
