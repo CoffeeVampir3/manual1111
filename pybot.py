@@ -54,6 +54,7 @@ async def worker():
                 print(f"Fucked up. {e}")
                 await ctx.send(content="Generation failed Q_Q")
                 work_queue.task_done()
+                return
 
         try:
             loop = asyncio.get_event_loop()
@@ -63,6 +64,7 @@ async def worker():
             print(f"Fucked up. {e}")
             await ctx.send(content="Generation failed Q_Q")
             work_queue.task_done()
+            return
 
         image_data = results[0] if results else None
         image_data = image_data[0] if image_data else None
