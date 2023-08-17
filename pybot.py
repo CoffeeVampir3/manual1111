@@ -52,13 +52,17 @@ async def worker():
                             ))
             except Exception as e:
                 print(f"Fucked up. {e}")
+                await ctx.send(content="Generation failed Q_Q")
+                work_queue.task_done()
 
         try:
             loop = asyncio.get_event_loop()
             with ThreadPoolExecutor() as pool:
                 results = await loop.run_in_executor(pool, run_generator)
         except Exception as e:
-            print(e)
+            print(f"Fucked up. {e}")
+            await ctx.send(content="Generation failed Q_Q")
+            work_queue.task_done()
 
         image_data = results[0] if results else None
         image_data = image_data[0] if image_data else None
