@@ -1,11 +1,12 @@
-from interactions import slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice, Task, listen, IntervalTrigger
+from interactions import slash_command, SlashContext, slash_option, OptionType, SlashCommandChoice, Task, listen, IntervalTrigger, Attachment
 from interactions import Client, Intents, listen
 from concurrent.futures import ThreadPoolExecutor
-from mechanisms.run_pipe import run_t2i
+from mechanisms.run_pipe import run_t2i, run_i2i
 from mechanisms.pipe_utils import unload_current_pipe
 from shared.scheduler_utils import get_available_scheduler_names
 from datetime import datetime
 from PIL import Image
+import aiohttp
 import asyncio, io, tempfile
 import sys, os
 
@@ -25,24 +26,39 @@ async def worker():
     while True:
         global last_generation_time
         global relevant_posts
-        ctx, prompt, cfg, steps, width, height, scheduler = await work_queue.get()
+        ctx, prompt, cfg, steps, width, height, scheduler, image = await work_queue.get()
 
         #safeguard against staling out mid run
         last_generation_time = datetime.timestamp(datetime.now())
-        def run_t2i_generator():
-            return list(run_t2i(
-                MODEL_PATH, width, height,
-                prompt, "",
-                -1, cfg, steps,
-                1, 1, scheduler
-            ))
+        if image is None:
+            def run_generator():
+                return list(run_t2i(
+                    MODEL_PATH, width, height,
+                    prompt, "",
+                    -1, cfg, steps,
+                    1, 1, scheduler
+                ))
+        else:
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(image.url) as response:
+                        initialization_data = Image.open(io.BytesIO(await response.read())).convert("RGB")
+                        def run_generator():
+                            return list(run_i2i(
+                                MODEL_PATH, initialization_data, 0.8,
+                                prompt, "",
+                                -1, cfg, steps,
+                                1, 1, scheduler
+                            ))
+            except Exception as e:
+                print(f"Fucked up. {e}")
 
         try:
             loop = asyncio.get_event_loop()
             with ThreadPoolExecutor() as pool:
-                results = await loop.run_in_executor(pool, run_t2i_generator)
-        except:
-            pass
+                results = await loop.run_in_executor(pool, run_generator)
+        except Exception as e:
+            print(e)
 
         image_data = results[0] if results else None
         image_data = image_data[0] if image_data else None
@@ -71,7 +87,7 @@ async def unload_if_unused_recently():
         print("Unloaded any stale pipes!")
 
 scheduler_choices = [SlashCommandChoice(name=key, value=key) for key in get_available_scheduler_names()]
-@slash_command(name="t2i", description="John Rambonius")
+@slash_command(name="generate", description="John Rambonius")
 @slash_option(
     name="prompt",
     description="The prompt.",
@@ -115,9 +131,15 @@ scheduler_choices = [SlashCommandChoice(name=key, value=key) for key in get_avai
     opt_type=OptionType.STRING,
     choices=scheduler_choices
 )
-async def my_command_function(ctx: SlashContext, prompt, cfg=8.0, steps=20, width=1024, height=1024, scheduler="EulerDiscrete"):
+@slash_option(
+    name="image",
+    description="image",
+    required=False,
+    opt_type=OptionType.ATTACHMENT,
+)
+async def my_command_function(ctx: SlashContext, prompt, cfg=8.0, steps=20, width=1024, height=1024, scheduler="EulerDiscrete", image:Attachment=None):
     await ctx.defer() # Allows > 3 second duration for responses
-    await work_queue.put((ctx, prompt, cfg, steps, width, height, scheduler))
+    await work_queue.put((ctx, prompt, cfg, steps, width, height, scheduler, image))
 
 @listen()
 async def on_startup():

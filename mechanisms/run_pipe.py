@@ -88,8 +88,10 @@ def run_i2i(model_path, image, strength,
         "strength":strength,
         "guidance_scale":classifier_free_guidance,
     }
-    
-    for all_images in run_pipe(pipe, 
-                    positive_prompt, negative_prompt, seed, 
-                    batch_size, number_of_batches,generation_configs):
-        yield all_images
+    try:
+        for all_images in run_pipe(pipe, 
+                        positive_prompt, negative_prompt, seed, 
+                        batch_size, number_of_batches,generation_configs):
+            yield all_images
+    except Exception as e:
+        print(e)
