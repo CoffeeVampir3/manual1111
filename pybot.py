@@ -26,7 +26,7 @@ async def worker():
     while True:
         global last_generation_time
         global relevant_posts
-        ctx, prompt, cfg, steps, width, height, scheduler, seed, image, intensity = await work_queue.get()
+        ctx, prompt, cfg, steps, width, height, scheduler, image, intensity = await work_queue.get()
 
         #safeguard against staling out mid run
         last_generation_time = datetime.timestamp(datetime.now())
@@ -35,7 +35,7 @@ async def worker():
                 return list(run_t2i(
                     MODEL_PATH, width, height,
                     prompt, "",
-                    seed, cfg, steps,
+                    -1, cfg, steps,
                     1, 1, scheduler
                 ))
         else:
@@ -47,7 +47,7 @@ async def worker():
                             return list(run_i2i(
                                 MODEL_PATH, initialization_data, intensity,
                                 prompt, "",
-                                seed, cfg, steps,
+                                -1, cfg, steps,
                                 1, 1, scheduler
                             ))
             except Exception as e:
@@ -131,12 +131,6 @@ scheduler_choices = [SlashCommandChoice(name=key, value=key) for key in get_avai
     max_value=2048
 )
 @slash_option(
-    name="seed",
-    description="The seed",
-    required=False,
-    opt_type=OptionType.INTEGER,
-)
-@slash_option(
     name="intensity",
     description="The intensity",
     required=False,
@@ -157,9 +151,9 @@ scheduler_choices = [SlashCommandChoice(name=key, value=key) for key in get_avai
     required=False,
     opt_type=OptionType.ATTACHMENT,
 )
-async def my_command_function(ctx: SlashContext, prompt, cfg=8.0, steps=20, width=1024, height=1024, scheduler="EulerDiscrete", seed=-1, image:Attachment=None, intensity=0.7):
+async def my_command_function(ctx: SlashContext, prompt, cfg=8.0, steps=20, width=1024, height=1024, scheduler="EulerDiscrete", image:Attachment=None, intensity=0.7):
     await ctx.defer() # Allows > 3 second duration for responses
-    await work_queue.put((ctx, prompt, cfg, steps, width, height, scheduler, seed, image, intensity))
+    await work_queue.put((ctx, prompt, cfg, steps, width, height, scheduler, image, intensity))
 
 @listen()
 async def on_startup():

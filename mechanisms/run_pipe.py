@@ -88,6 +88,7 @@ def run_i2i(model_path, image, strength,
         "strength":strength,
         "guidance_scale":classifier_free_guidance,
     }
+    
     try:
         for all_images in run_pipe(pipe, 
                         positive_prompt, negative_prompt, seed, 
