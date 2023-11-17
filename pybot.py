@@ -26,7 +26,7 @@ async def worker():
     while True:
         global last_generation_time
         global relevant_posts
-        ctx, prompt, cfg, steps, width, height, scheduler, image, intensity = await work_queue.get()
+        ctx, prompt, negative_prompt, cfg, steps, width, height, scheduler, image, intensity = await work_queue.get()
 
         #safeguard against staling out mid run
         last_generation_time = datetime.timestamp(datetime.now())
@@ -34,7 +34,7 @@ async def worker():
             def run_generator():
                 return list(run_t2i(
                     MODEL_PATH, width, height,
-                    prompt, "",
+                    prompt, negative_prompt,
                     -1, cfg, steps,
                     1, 1, scheduler
                 ))
@@ -46,7 +46,7 @@ async def worker():
                         def run_generator():
                             return list(run_i2i(
                                 MODEL_PATH, initialization_data, intensity,
-                                prompt, "",
+                                prompt, negative_prompt,
                                 -1, cfg, steps,
                                 1, 1, scheduler
                             ))
@@ -101,6 +101,12 @@ scheduler_choices = [SlashCommandChoice(name=key, value=key) for key in get_avai
     opt_type=OptionType.STRING
 )
 @slash_option(
+    name="negative_prompt",
+    description="Anti prompt",
+    required=False,
+    opt_type=OptionType.STRING
+)
+@slash_option(
     name="cfg",
     description="Classifier free guidance value",
     required=False,
@@ -151,9 +157,9 @@ scheduler_choices = [SlashCommandChoice(name=key, value=key) for key in get_avai
     required=False,
     opt_type=OptionType.ATTACHMENT,
 )
-async def my_command_function(ctx: SlashContext, prompt, cfg=8.0, steps=20, width=1024, height=1024, scheduler="EulerDiscrete", image:Attachment=None, intensity=0.7):
+async def my_command_function(ctx: SlashContext, prompt, negative_prompt="", cfg=8.0, steps=20, width=1024, height=1024, scheduler="EulerDiscrete", image:Attachment=None, intensity=0.7):
     await ctx.defer() # Allows > 3 second duration for responses
-    await work_queue.put((ctx, prompt, cfg, steps, width, height, scheduler, image, intensity))
+    await work_queue.put((ctx, prompt, negative_prompt, cfg, steps, width, height, scheduler, image, intensity))
 
 @listen()
 async def on_startup():
